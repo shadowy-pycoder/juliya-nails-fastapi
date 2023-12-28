@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "juliya-nails-fastapi"
+version = "0.1.0"
+description = ""
+authors = ["shadowy-pycoder <shadowy-pycoder@example.com>"]
+readme = "README.md"
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+alembic = "^1.11.1"
+asyncpg = "^0.28.0"
+fastapi = {extras = ["all"], version = "^0.100.0"}
+python-dotenv = "^1.0.0"
+sqlalchemy = {extras = ["mypy"], version = "^2.0.23"}
+pydantic-settings = "^2.0.1"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+mypy = "^1.7.1"
+pydantic = "^2.5.2"
+types-passlib = "^1.7.7.13"
+types-python-jose = "^3.3.4.8"
+passlib = "^1.7.4"
+aioredis = "2.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
