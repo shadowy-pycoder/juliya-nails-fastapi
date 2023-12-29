@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from pydantic import UUID4
 
 from api.v1.dependencies import get_admin_user, verify_credentials
@@ -16,11 +17,13 @@ router = APIRouter(
 
 
 @router.get('/', response_model=list[UserRead])
+@cache()
 async def get_users(service: UserService = Depends()) -> list[UserRead]:
     return [UserRead.model_validate(user) for user in await service.find_all()]
 
 
 @router.get('/me', response_model=UserRead)
+@cache()
 async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
     return user
 
@@ -44,6 +47,7 @@ async def patch_me(
 
 
 @router.get('/{uuid}', response_model=UserRead)
+@cache()
 async def get_one(uuid: UUID4, service: UserService = Depends()) -> UserRead:
     user = await service.find_by_uuid(uuid)
     if not user:

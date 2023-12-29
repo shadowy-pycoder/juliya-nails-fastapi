@@ -8,10 +8,11 @@ from passlib.hash import bcrypt
 from pydantic import ValidationError
 
 from models.users import User
-from services.users import UserService
-from settings import settings
 from schemas.auth import UserPayload, Token
 from schemas.users import UserRead, UserCreate
+from services.users import UserService
+from settings import settings
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
 

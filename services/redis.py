@@ -12,7 +12,7 @@ def create_redis() -> aioredis.ConnectionPool:
         port=settings.redis_port,
         # db=settings.redis_db,
         # password=settings.redis_password,
-        decode_responses=True,
+        decode_responses=False,
     )
 
 
@@ -31,8 +31,8 @@ class RedisService:
     def encrypt_token(self, token: str) -> bytes:
         return self.fernet.encrypt(token.encode('utf-8'))
 
-    def decrypt_token(self, token: str) -> str:
-        return self.fernet.decrypt(token.encode('utf-8')).decode('utf-8')
+    def decrypt_token(self, token: bytes) -> str:
+        return self.fernet.decrypt(token).decode('utf-8')
 
     async def send_token(self, token: str, uuid: UUID4 | str) -> None:
         encrypted_token = self.encrypt_token(token)
