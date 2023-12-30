@@ -9,6 +9,7 @@ class UserService(
     BaseService[User, UserRead, UserCreate, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial]
 ):
     model = User
+    schema = UserRead
 
     async def verify_username(self, value: str) -> str:
         user = await self.session.scalar(sa.select(User).filter(User.username.ilike(value)))

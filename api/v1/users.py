@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi_cache.decorator import cache
+from fastapi_pagination.links import Page
 from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, verify_credentials
@@ -8,17 +9,17 @@ from services.users import UserService
 
 
 router = APIRouter(
-    prefix='/users',
+    prefix='/api/v1/users',
     tags=['users'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
     responses={404: {'description': 'Not found'}, 401: {'description': 'Unauthorized'}},
 )
 
 
-@router.get('/', response_model=list[UserRead])
+@router.get('/', response_model=Page[UserRead])
 @cache()
-async def get_users(service: UserService = Depends()) -> list[UserRead]:
-    return [UserRead.model_validate(user) for user in await service.find_all()]
+async def get_users(service: UserService = Depends()) -> Page[UserRead]:
+    return await service.find_all()
 
 
 @router.get('/me', response_model=UserRead)

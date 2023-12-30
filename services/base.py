@@ -1,11 +1,14 @@
 from typing import Any, Type, TypeVar, Generic
 
 from fastapi import Depends
+from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination.links import Page
 from pydantic import UUID4, BaseModel
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_async_session
 from models.base import BaseDBModel
+from schemas.users import UserRead
 
 BaseModelType = TypeVar('BaseModelType', bound=BaseDBModel)
 BaseSchemaType = TypeVar('BaseSchemaType', bound=BaseModel)
@@ -28,13 +31,18 @@ class BaseService(
     ]
 ):
     model: Type[BaseModelType]
+    schema: Type[BaseSchemaType]
 
     def __init__(self, session: AsyncSession = Depends(get_async_session)) -> None:
         self.session = session
 
-    async def find_all(self, /, **filter_by: Any) -> list[BaseModelType]:
-        result = await self.session.scalars(sa.select(self.model).filter_by(**filter_by))
-        return list(result.all())
+    async def find_all(self, /, **filter_by: Any) -> Page[BaseSchemaType]:
+        query = sa.select(self.model).filter_by(**filter_by)
+        return await paginate(
+            self.session,
+            query,
+            transformer=lambda items: [UserRead.model_validate(item) for item in items],
+        )
 
     async def find_by_uuid(self, uuid: UUID4 | str) -> BaseModelType | None:
         return await self.session.scalar(sa.select(self.model).filter_by(uuid=uuid))

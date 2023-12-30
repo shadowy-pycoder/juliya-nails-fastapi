@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi.encoders import jsonable_encoder
+from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 
 
@@ -12,6 +13,7 @@ from services.redis import get_redis
 
 app = FastAPI(title='JuliyaNails', description='Beauty master service', version='1.0.0')
 app.include_router(router_v1)
+add_pagination(app)
 
 
 @app.exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
