@@ -38,7 +38,8 @@ class BaseUser(BaseModel):
 class UserRead(BaseUser):
     model_config = ConfigDict(from_attributes=True)
     uuid: UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
-    registered_on: datetime
+    created: datetime
+    updated: datetime
     confirmed: bool
     confirmed_on: datetime | None
     admin: bool
@@ -129,7 +130,8 @@ class UserAdminUpdate(BaseModel):
     email: Annotated[EmailStr, Field(max_length=100)]
     username: Annotated[str, Field(min_length=2, max_length=20)]
     password: Annotated[str, Field(exclude=True, min_length=8)]
-    registered_on: datetime
+    created: datetime
+    updated: datetime
     confirmed: bool
     confirmed_on: datetime
     admin: bool
@@ -139,7 +141,8 @@ class UserAdminUpdatePartial(BaseModel):
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
     username: Annotated[str | None, Field(min_length=2, max_length=20)] = None
     password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
-    registered_on: datetime | None = None
+    created: datetime | None = None
+    updated: datetime | None = None
     confirmed: bool | None = None
     confirmed_on: datetime | None = None
     admin: bool | None = None

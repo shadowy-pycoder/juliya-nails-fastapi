@@ -46,6 +46,7 @@ class BaseService(
         new_instance = self.model(**values.model_dump())
         self.session.add(new_instance)
         await self.session.commit()
+        await self.session.refresh(new_instance)
         return new_instance
 
     async def update(
@@ -58,6 +59,7 @@ class BaseService(
     ) -> BaseModelType:
         instance.update(values.model_dump(exclude_unset=partial))
         await self.session.commit()
+        await self.session.refresh(instance)
         return instance
 
     async def delete(self, instance: BaseModelType) -> None:

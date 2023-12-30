@@ -9,6 +9,7 @@ from sqlalchemy import pool
 from alembic import context
 
 sys.path.append(os.path.join(sys.path[0], 'juliya-nails-fastapi'))
+from models.users import User
 
 from settings import settings
 from database import Base
