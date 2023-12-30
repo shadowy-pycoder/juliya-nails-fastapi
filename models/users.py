@@ -13,8 +13,9 @@ class User(BaseDBModel):
     email: so.Mapped[str] = so.mapped_column(sa.String(100), unique=True, nullable=False, index=True)
     hashed_password: so.Mapped[str] = so.mapped_column(sa.String(60), nullable=False)
     username: so.Mapped[str] = so.mapped_column(sa.String(20), unique=True, nullable=False, index=True)
-    confirmed: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
+    confirmed: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')
     confirmed_on: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
+    active: so.Mapped[bool] = so.mapped_column(nullable=False, default=True, server_default='true')
     admin: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
 
     @property

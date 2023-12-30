@@ -17,11 +17,6 @@ from settings import settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), service: UserService = Depends()) -> UserRead:
-    user_payload = AuthService.validate_token(token)
-    return UserRead.model_validate(await service.find_by_uuid(user_payload.uuid))
-
-
 class AuthService:
     def __init__(self, service: UserService = Depends()) -> None:
         self.service = service

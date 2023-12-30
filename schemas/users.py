@@ -42,6 +42,7 @@ class UserRead(BaseUser):
     updated: datetime
     confirmed: bool
     confirmed_on: datetime | None
+    active: bool
     admin: bool
 
     @computed_field  # type: ignore[misc]
@@ -131,9 +132,9 @@ class UserAdminUpdate(BaseModel):
     username: Annotated[str, Field(min_length=2, max_length=20)]
     password: Annotated[str, Field(exclude=True, min_length=8)]
     created: datetime
-    updated: datetime
     confirmed: bool
     confirmed_on: datetime
+    active: bool
     admin: bool
 
 
@@ -142,7 +143,7 @@ class UserAdminUpdatePartial(BaseModel):
     username: Annotated[str | None, Field(min_length=2, max_length=20)] = None
     password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
     created: datetime | None = None
-    updated: datetime | None = None
     confirmed: bool | None = None
     confirmed_on: datetime | None = None
+    active: bool | None = None
     admin: bool | None = None
