@@ -1,10 +1,11 @@
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi_cache.decorator import cache
+from fastapi_filter import FilterDepends
 from fastapi_pagination.links import Page
 from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, verify_credentials
-from schemas.users import UserRead, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial
+from schemas.users import UserRead, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial, UserFilter
 from services.users import UserService
 
 
@@ -18,8 +19,8 @@ router = APIRouter(
 
 @router.get('/', response_model=Page[UserRead])
 @cache()
-async def get_users(service: UserService = Depends()) -> Page[UserRead]:
-    return await service.find_all()
+async def get_users(user_filter: UserFilter = FilterDepends(UserFilter), service: UserService = Depends()) -> Page[UserRead]:
+    return await service.find_all(user_filter)
 
 
 @router.get('/me', response_model=UserRead)

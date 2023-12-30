@@ -23,6 +23,7 @@ passlib = "^1.7.4"
 aioredis = "2.0.1"
 fastapi-cache2 = {extras = ["redis"], version = "^0.2.1"}
 fastapi-pagination = "^0.12.14"
+fastapi-filter = {extras = ["sqlalchemy"], version = "^1.0.0"}
 
 
 [build-system]

@@ -1,6 +1,7 @@
 from typing import Any, Type, TypeVar, Generic
 
 from fastapi import Depends
+from fastapi_filter.contrib.sqlalchemy import Filter
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination.links import Page
 from pydantic import UUID4, BaseModel
@@ -17,6 +18,7 @@ BaseSchemaUpdateType = TypeVar('BaseSchemaUpdateType', bound=BaseModel)
 BaseSchemaUpdatePartialType = TypeVar('BaseSchemaUpdatePartialType', bound=BaseModel)
 BaseSchemaAdminUpdateType = TypeVar('BaseSchemaAdminUpdateType', bound=BaseModel)
 BaseSchemaAdminUpdatePartialType = TypeVar('BaseSchemaAdminUpdatePartialType', bound=BaseModel)
+BaseFilterType = TypeVar('BaseFilterType', bound=Filter)
 
 
 class BaseService(
@@ -28,16 +30,20 @@ class BaseService(
         BaseSchemaUpdatePartialType,
         BaseSchemaAdminUpdateType,
         BaseSchemaAdminUpdatePartialType,
+        BaseFilterType,
     ]
 ):
     model: Type[BaseModelType]
     schema: Type[BaseSchemaType]
+    filter_type: Type[BaseFilterType]
 
     def __init__(self, session: AsyncSession = Depends(get_async_session)) -> None:
         self.session = session
 
-    async def find_all(self, /, **filter_by: Any) -> Page[BaseSchemaType]:
-        query = sa.select(self.model).filter_by(**filter_by)
+    async def find_all(self, model_filter: BaseFilterType) -> Page[BaseSchemaType]:
+        query = sa.select(self.model)
+        query = model_filter.filter(query)
+        query = model_filter.sort(query)
         return await paginate(
             self.session,
             query,

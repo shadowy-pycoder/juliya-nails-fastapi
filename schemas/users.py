@@ -5,7 +5,7 @@ import re
 from typing import Annotated
 import uuid  # noqa: F401
 
-
+from fastapi_filter.contrib.sqlalchemy import Filter
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -17,6 +17,8 @@ from pydantic import (
     model_validator,
     computed_field,
 )
+
+from models.users import User
 
 
 class BaseUser(BaseModel):
@@ -36,7 +38,6 @@ class BaseUser(BaseModel):
 
 
 class UserRead(BaseUser):
-    model_config = ConfigDict(from_attributes=True)
     uuid: UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
     created: datetime
     updated: datetime
@@ -147,3 +148,32 @@ class UserAdminUpdatePartial(BaseModel):
     confirmed_on: datetime | None = None
     active: bool | None = None
     admin: bool | None = None
+
+
+class UserFilter(Filter):
+    email: str | None = None
+    username: str | None = None
+    username__ilike: str | None = None
+    username__like: str | None = None
+    username__neq: str | None = None
+    username__in: list[str] | None = None
+    username__nin: list[str] | None = None
+    created: datetime | None = None
+    created__gt: datetime | None = None
+    created__gte: datetime | None = None
+    created__lt: datetime | None = None
+    created__lte: datetime | None = None
+    confirmed: bool | None = None
+    confirmed_on: datetime | None = None
+    confirmed_on__gt: datetime | None = None
+    confirmed_on__gte: datetime | None = None
+    confirmed_on__lt: datetime | None = None
+    confirmed_on__lte: datetime | None = None
+    active: bool | None = None
+    admin: bool | None = None
+    order_by: list[str] = ['created']
+    search: str | None = None
+
+    class Constants(Filter.Constants):
+        model = User
+        search_model_fields = ['username']
