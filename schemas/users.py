@@ -5,7 +5,6 @@ import re
 from typing import Annotated
 import uuid  # noqa: F401
 
-from fastapi_filter.contrib.sqlalchemy import Filter
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -19,22 +18,14 @@ from pydantic import (
 )
 
 from models.users import User
+from schemas.base import BaseFilter
+from utils import PATTERNS
 
 
 class BaseUser(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     email: Annotated[EmailStr, Field(max_length=100)]
-    username: Annotated[str, Field(min_length=2, max_length=20)]
-
-    @field_validator('username')
-    @classmethod
-    def validate_username(cls, v: str) -> str:
-        pattern = re.compile(r"^[A-Za-z][A-Za-z0-9_.]*$")
-        if not v[0].isalpha():
-            raise ValueError('Usernames must start with a letter')
-        if not pattern.match(v):
-            raise ValueError('Usernames must have only letters, numbers, dots or underscores')
-        return v
+    username: Annotated[str, Field(min_length=2, max_length=20, pattern=PATTERNS['username'])]
 
 
 class UserRead(BaseUser):
@@ -48,15 +39,13 @@ class UserRead(BaseUser):
 
     @computed_field  # type: ignore[misc]
     @cached_property
-    def url(self) -> str:
+    def socials(self) -> str:
         from api.v1.users import router
 
-        return router.url_path_for('get_one', uuid=self.uuid)
+        return router.url_path_for('get_user_socials', uuid=self.uuid)
 
 
 class UserCreate(BaseUser):
-    email: Annotated[EmailStr, Field(max_length=100)]
-    username: Annotated[str, Field(min_length=2, max_length=20)]
     password: Annotated[str, Field(min_length=8)]
     confirm_password: Annotated[str, Field(exclude=True, min_length=8)]
 
@@ -93,7 +82,7 @@ class UserUpdate(UserCreate):
 
 class UserUpdatePartial(BaseModel):
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
-    username: Annotated[str | None, Field(min_length=2, max_length=20)] = None
+    username: Annotated[str | None, Field(min_length=2, max_length=20, pattern=PATTERNS['username'])] = None
     password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
     confirm_password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
 
@@ -128,7 +117,7 @@ class UserUpdatePartial(BaseModel):
         return self
 
 
-class UserAdminUpdate(BaseModel):
+class UserAdminUpdate(BaseUser):
     email: Annotated[EmailStr, Field(max_length=100)]
     username: Annotated[str, Field(min_length=2, max_length=20)]
     password: Annotated[str, Field(exclude=True, min_length=8)]
@@ -150,7 +139,20 @@ class UserAdminUpdatePartial(BaseModel):
     admin: bool | None = None
 
 
-class UserFilter(Filter):
+class UserInfoSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    uuid: UUID4 | str
+    username: str
+
+    @computed_field  # type: ignore[misc]
+    @cached_property
+    def url(self) -> str:
+        from api.v1.users import router
+
+        return router.url_path_for('get_one', uuid=self.uuid)
+
+
+class UserFilter(BaseFilter):
     email: str | None = None
     username: str | None = None
     username__ilike: str | None = None
@@ -158,11 +160,6 @@ class UserFilter(Filter):
     username__neq: str | None = None
     username__in: list[str] | None = None
     username__nin: list[str] | None = None
-    created: datetime | None = None
-    created__gt: datetime | None = None
-    created__gte: datetime | None = None
-    created__lt: datetime | None = None
-    created__lte: datetime | None = None
     confirmed: bool | None = None
     confirmed_on: datetime | None = None
     confirmed_on__gt: datetime | None = None
@@ -171,9 +168,7 @@ class UserFilter(Filter):
     confirmed_on__lte: datetime | None = None
     active: bool | None = None
     admin: bool | None = None
-    order_by: list[str] = ['created']
-    search: str | None = None
 
-    class Constants(Filter.Constants):
+    class Constants(BaseFilter.Constants):
         model = User
-        search_model_fields = ['username']
+        search_model_fields = ['username', 'uuid']

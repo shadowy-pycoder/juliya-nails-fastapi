@@ -1,6 +1,6 @@
 from typing import Any, Type, TypeVar, Generic
 
-from fastapi import Depends
+from fastapi import Depends, status, HTTPException
 from fastapi_filter.contrib.sqlalchemy import Filter
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination.links import Page
@@ -9,7 +9,6 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_async_session
 from models.base import BaseDBModel
-from schemas.users import UserRead
 
 BaseModelType = TypeVar('BaseModelType', bound=BaseDBModel)
 BaseSchemaType = TypeVar('BaseSchemaType', bound=BaseModel)
@@ -47,14 +46,20 @@ class BaseService(
         return await paginate(
             self.session,
             query,
-            transformer=lambda items: [UserRead.model_validate(item) for item in items],
+            transformer=lambda items: [self.schema.model_validate(item) for item in items],
         )
 
-    async def find_by_uuid(self, uuid: UUID4 | str) -> BaseModelType | None:
-        return await self.session.scalar(sa.select(self.model).filter_by(uuid=uuid))
+    async def find_by_uuid(self, uuid: UUID4 | str, detail: str = 'Not found') -> BaseModelType:
+        result = await self.session.scalar(sa.select(self.model).filter_by(uuid=uuid))
+        if not result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        return result
 
-    async def find_one_or_none(self, /, **filter_by: Any) -> BaseModelType | None:
-        return await self.session.scalar(sa.select(self.model).filter_by(**filter_by))
+    async def find_one(self, detail: str = 'Not found', **filter_by: Any) -> BaseModelType:
+        result = await self.session.scalar(sa.select(self.model).filter_by(**filter_by))
+        if not result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+        return result
 
     async def create(self, values: BaseSchemaCreateType) -> BaseModelType:
         new_instance = self.model(**values.model_dump())

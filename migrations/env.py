@@ -1,4 +1,4 @@
-# ruff: noqa: E402
+# ruff: noqa: E402, F401
 from logging.config import fileConfig
 import os
 import sys
@@ -9,9 +9,10 @@ from sqlalchemy import pool
 from alembic import context
 
 sys.path.append(os.path.join(sys.path[0], 'juliya-nails-fastapi'))
+from models.socials import SocialMedia
 from models.users import User
 
-from settings import settings
+from config import config as api_config
 from database import Base
 
 
@@ -20,11 +21,11 @@ from database import Base
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, 'DB_HOST', settings.db_host)
-config.set_section_option(section, 'DB_NAME', settings.db_name)
-config.set_section_option(section, 'DB_PASS', settings.db_pass)
-config.set_section_option(section, 'DB_PORT', str(settings.db_port))
-config.set_section_option(section, 'DB_USER', settings.db_user)
+config.set_section_option(section, 'DB_HOST', api_config.db_host)
+config.set_section_option(section, 'DB_NAME', api_config.db_name)
+config.set_section_option(section, 'DB_PASS', api_config.db_pass)
+config.set_section_option(section, 'DB_PORT', str(api_config.db_port))
+config.set_section_option(section, 'DB_USER', api_config.db_user)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

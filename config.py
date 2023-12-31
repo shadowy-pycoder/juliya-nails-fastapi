@@ -1,7 +1,9 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Config(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
     server_host: str = '127.0.0.1'
     server_port: int = 8000
@@ -22,6 +24,9 @@ class Settings(BaseSettings):
     # redis_password: str
     redis_hash: str
     encrypt_key: bytes
+    root_dir: Path = Path(__file__).resolve().parent
+    upload_dir: str = 'static/images/'
+    default_avatar: str = 'default.jpg'
 
 
-settings = Settings()
+config = Config()

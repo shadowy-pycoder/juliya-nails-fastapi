@@ -2,9 +2,9 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 import sqlalchemy.orm as so
 
-from settings import settings
+from config import config
 
-DATABASE_URL = settings.database_url
+DATABASE_URL = config.database_url
 
 
 class Base(so.DeclarativeBase):

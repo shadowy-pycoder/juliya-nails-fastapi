@@ -1,10 +1,14 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from passlib.hash import bcrypt
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 
-from .base import BaseDBModel
+from models.base import BaseDBModel
+
+if TYPE_CHECKING:
+    from models.socials import SocialMedia
 
 
 class User(BaseDBModel):
@@ -17,6 +21,7 @@ class User(BaseDBModel):
     confirmed_on: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
     active: so.Mapped[bool] = so.mapped_column(nullable=False, default=True, server_default='true')
     admin: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
+    socials: so.Mapped['SocialMedia'] = so.relationship(back_populates='user', cascade="all, delete-orphan")
 
     @property
     def password(self) -> None:

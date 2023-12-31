@@ -1,3 +1,5 @@
 __pycache__/
 .vscode/
 *.env*
+static/images/posts/*
+static/images/profiles/*

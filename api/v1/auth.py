@@ -3,11 +3,13 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from services.auth import AuthService
-from services.users import UserService
-from services.redis import RedisService
 from schemas.auth import Token
+from schemas.socials import SocialCreate
 from schemas.users import UserRead, UserCreate
+from services.auth import AuthService
+from services.redis import RedisService
+from services.socials import SocialService
+from services.users import UserService
 
 
 router = APIRouter(
@@ -18,7 +20,10 @@ router = APIRouter(
 
 @router.post('/register', response_model=UserRead, response_model_exclude_defaults=True)
 async def register(
-    user_data: UserCreate, auth_service: AuthService = Depends(), user_service: UserService = Depends()
+    user_data: UserCreate,
+    auth_service: AuthService = Depends(),
+    user_service: UserService = Depends(),
+    social_service: SocialService = Depends(),
 ) -> UserRead:
     errors = []
     if username_err := await user_service.verify_username(user_data.username):
@@ -27,7 +32,9 @@ async def register(
         errors.append(email_err)
     if errors:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail='\n'.join(e for e in errors))
-    return await auth_service.register_user(user_data)
+    user = await auth_service.register_user(user_data)
+    await social_service.create(SocialCreate(user_id=user.uuid))
+    return UserRead.model_validate(user)
 
 
 @router.post('/token', response_model=Token)

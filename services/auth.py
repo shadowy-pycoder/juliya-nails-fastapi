@@ -9,9 +9,9 @@ from pydantic import ValidationError
 
 from models.users import User
 from schemas.auth import UserPayload, Token
-from schemas.users import UserRead, UserCreate
+from schemas.users import UserCreate
 from services.users import UserService
-from settings import settings
+from config import config
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
@@ -40,7 +40,7 @@ class AuthService:
                 headers={'WWW-Authenticate': 'Bearer'},
             )
         try:
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+            payload = jwt.decode(token, config.jwt_secret_key, algorithms=[config.jwt_algorithm])
         except JWTError:
             raise exception from None
         user_data = payload.get('user')
@@ -64,10 +64,10 @@ class AuthService:
         user_data = UserPayload.model_validate(user)
         now = datetime.utcnow()
         if refresh_token:
-            expiration = timedelta(seconds=settings.jwt_refresh_expiration)
+            expiration = timedelta(seconds=config.jwt_refresh_expiration)
             access = False
         else:
-            expiration = timedelta(seconds=settings.jwt_expiration)
+            expiration = timedelta(seconds=config.jwt_expiration)
             access = True
         payload = {
             'iat': now,
@@ -79,14 +79,13 @@ class AuthService:
         }
         token = jwt.encode(
             payload,
-            settings.jwt_secret_key,
-            algorithm=settings.jwt_algorithm,
+            config.jwt_secret_key,
+            algorithm=config.jwt_algorithm,
         )
         return token
 
-    async def register_user(self, user_data: UserCreate) -> UserRead:
-        user = await self.service.create(user_data)
-        return UserRead.model_validate(user)
+    async def register_user(self, user_data: UserCreate) -> User:
+        return await self.service.create(user_data)
 
     async def get_token(self, form_data: OAuth2PasswordRequestForm) -> tuple[Token, User]:
         exception = HTTPException(
@@ -94,23 +93,25 @@ class AuthService:
             detail='Incorrect username or password',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-        user = await self.service.find_one_or_none(username=form_data.username)
-        if not user:
-            raise exception
+        try:
+            user = await self.service.find_one(username=form_data.username)
+        except HTTPException:
+            raise exception from None
         if not self.verify_password(form_data.password, user.hashed_password):
-            raise exception
+            raise exception from None
         access_token = self.create_token(user)
         refresh_token = self.create_token(user, refresh_token=True)
         return Token(access_token=access_token, refresh_token=refresh_token), user
 
     async def get_refresh_token(self, token: str) -> tuple[Token, User]:
         user_payload = AuthService.validate_token(token, refresh_token=True)
-        user: User | None = await self.service.find_by_uuid(user_payload.uuid)
-        if not user:
+        try:
+            user = await self.service.find_by_uuid(user_payload.uuid)
+        except HTTPException:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token",
                 headers={"WWW-Authenticate": "Bearer"},
-            )
+            ) from None
         access_token = self.create_token(user)
         return Token(access_token=access_token, refresh_token=token), user
