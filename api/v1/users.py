@@ -5,7 +5,8 @@ from fastapi_pagination.links import Page
 from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, verify_credentials
-from schemas.socials import SocialRead, SocialAdminUpdate, SocialAdminUpdatePartial
+from models.users import User
+from schemas.socials import SocialRead, SocialAdminUpdate, SocialAdminUpdatePartial, SocialUpdate, SocialUpdatePartial
 from schemas.users import UserRead, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial, UserFilter
 from services.socials import SocialService
 from services.users import UserService
@@ -33,20 +34,48 @@ async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
 
 @router.put('/me', response_model=UserRead)
 async def update_me(
-    user_data: UserUpdate, current_user: UserRead = Depends(get_current_user), service: UserService = Depends()
+    user_data: UserUpdate, current_user: User = Depends(get_current_user), service: UserService = Depends()
 ) -> UserRead:
-    user = await verify_credentials(current_user.uuid, user_data, service)
-    user = await service.update(user, user_data)
+    await verify_credentials(current_user, user_data, service)
+    user = await service.update(current_user, user_data)
     return UserRead.model_validate(user)
 
 
 @router.patch('/me', response_model=UserRead)
 async def patch_me(
-    user_data: UserUpdatePartial, current_user: UserRead = Depends(get_current_user), service: UserService = Depends()
+    user_data: UserUpdatePartial, current_user: User = Depends(get_current_user), service: UserService = Depends()
 ) -> UserRead:
-    user = await verify_credentials(current_user.uuid, user_data, service)
-    user = await service.update(user, user_data, partial=True)
+    await verify_credentials(current_user, user_data, service)
+    user = await service.update(current_user, user_data, partial=True)
     return UserRead.model_validate(user)
+
+
+@router.get('/me/socials', response_model=SocialRead)
+@cache()
+async def get_my_socials(user: User = Depends(get_current_user)) -> SocialRead:
+    return SocialRead.model_validate(user.socials)
+
+
+@router.put(
+    '/me/socials',
+    response_model=SocialRead,
+)
+async def update_my_socials(
+    social_data: SocialUpdate, user: User = Depends(get_current_user), service: SocialService = Depends()
+) -> SocialRead:
+    social = await service.update(user.socials, social_data)
+    return SocialRead.model_validate(social)
+
+
+@router.patch(
+    '/me/socials',
+    response_model=SocialRead,
+)
+async def patch_my_socials(
+    social_data: SocialUpdatePartial, user: User = Depends(get_current_user), service: SocialService = Depends()
+) -> SocialRead:
+    social = await service.update(user.socials, social_data, partial=True)
+    return SocialRead.model_validate(social)
 
 
 @router.get('/{uuid}', response_model=UserRead)
@@ -63,7 +92,8 @@ async def get_one(uuid: UUID4 | str, service: UserService = Depends()) -> UserRe
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def update_one(uuid: UUID4 | str, user_data: UserAdminUpdate, service: UserService = Depends()) -> UserRead:
-    user = await verify_credentials(uuid, user_data, service)
+    user = await service.find_by_uuid(uuid, detail='User does not exist')
+    await verify_credentials(user, user_data, service)
     user = await service.update(user, user_data)
     return UserRead.model_validate(user)
 
@@ -75,7 +105,8 @@ async def update_one(uuid: UUID4 | str, user_data: UserAdminUpdate, service: Use
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def patch_one(uuid: UUID4 | str, user_data: UserAdminUpdatePartial, service: UserService = Depends()) -> UserRead:
-    user = await verify_credentials(uuid, user_data, service)
+    user = await service.find_by_uuid(uuid, detail='User does not exist')
+    await verify_credentials(user, user_data, service)
     user = await service.update(user, user_data, partial=True)
     return UserRead.model_validate(user)
 

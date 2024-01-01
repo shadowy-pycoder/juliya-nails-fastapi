@@ -21,7 +21,7 @@ class User(BaseDBModel):
     confirmed_on: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
     active: so.Mapped[bool] = so.mapped_column(nullable=False, default=True, server_default='true')
     admin: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
-    socials: so.Mapped['SocialMedia'] = so.relationship(back_populates='user', cascade="all, delete-orphan")
+    socials: so.Mapped['SocialMedia'] = so.relationship(back_populates='user', cascade="all, delete-orphan", lazy='joined')
 
     @property
     def password(self) -> None:

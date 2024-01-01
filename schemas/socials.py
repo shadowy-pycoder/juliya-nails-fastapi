@@ -4,7 +4,7 @@ from functools import cached_property
 from typing import Annotated
 import uuid  # noqa: F401
 
-from pydantic import BaseModel, UUID4, Field, computed_field, AfterValidator, ConfigDict
+from pydantic import BaseModel, UUID4, Field, computed_field, AfterValidator, ConfigDict, field_validator
 
 
 from models.socials import SocialMedia
@@ -26,6 +26,10 @@ class BaseSocial(BaseModel):
     website: Annotated[str | None, Field(max_length=255, pattern=PATTERNS['website'])] = None
     vk: Annotated[str | None, Field(max_length=255, pattern=PATTERNS['vk'])] = None
     about: Annotated[str | None, Field(max_length=255)] = None
+
+    @field_validator('first_name', 'last_name', mode='after')
+    def capitalize(cls, v: str) -> str | None:
+        return v.capitalize() if v else None
 
 
 class SocialRead(BaseSocial):
@@ -52,6 +56,7 @@ class SocialUpdatePartial(BaseSocial):
 
 
 class SocialUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     first_name: Annotated[str, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])]
     last_name: Annotated[str, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])]
     phone_number: Annotated[str, Field(max_length=50, pattern=PATTERNS['phone_number'])]
