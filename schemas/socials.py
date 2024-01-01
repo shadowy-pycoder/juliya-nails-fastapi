@@ -57,6 +57,7 @@ class SocialUpdatePartial(BaseSocial):
 
 class SocialUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+    avatar: str
     first_name: Annotated[str, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])]
     last_name: Annotated[str, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])]
     phone_number: Annotated[str, Field(max_length=50, pattern=PATTERNS['phone_number'])]

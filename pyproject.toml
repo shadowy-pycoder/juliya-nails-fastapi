@@ -28,6 +28,7 @@ pillow = "^10.1.0"
 types-pillow = "^10.1.0.2"
 aiofiles = "^23.2.1"
 types-aiofiles = "^23.2.0.0"
+filetype = "^1.2.0"
 
 
 [build-system]

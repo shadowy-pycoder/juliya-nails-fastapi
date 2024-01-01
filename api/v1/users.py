@@ -1,7 +1,8 @@
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, UploadFile
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
 from fastapi_pagination.links import Page
+from fastapi.responses import FileResponse
 from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, verify_credentials
@@ -76,6 +77,31 @@ async def patch_my_socials(
 ) -> SocialRead:
     social = await service.update(user.socials, social_data, partial=True)
     return SocialRead.model_validate(social)
+
+
+@router.get(
+    '/me/socials/avatar',
+    response_class=FileResponse,
+)
+async def get_my_avatar(user: User = Depends(get_current_user), service: SocialService = Depends()) -> FileResponse:
+    return FileResponse(service.get_avatar(user.socials))
+
+
+@router.put(
+    '/me/socials/avatar',
+    response_model=SocialRead,
+    responses={413: {'description': 'Too large'}, 415: {'description': 'Unsupported file type'}},
+)
+async def update_my_avatar(
+    file: UploadFile, user: User = Depends(get_current_user), service: SocialService = Depends()
+) -> SocialRead:
+    await service.update_avatar(user.socials, file)
+    return SocialRead.model_validate(user.socials)
+
+
+@router.delete('/me/socials/avatar', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_avatar(user: User = Depends(get_current_user), service: SocialService = Depends()) -> None:
+    await service.delete_avatar(user.socials)
 
 
 @router.get('/{uuid}', response_model=UserRead)
@@ -162,3 +188,41 @@ async def patch_user_socials(
     social = await service.find_one(user_id=uuid, detail='Social page does not exist')
     social = await service.update(social, social_data, partial=True)
     return SocialRead.model_validate(social)
+
+
+@router.get(
+    '/{uuid}/socials/avatar',
+    response_class=FileResponse,
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
+async def get_user_avatar(uuid: UUID4 | str, service: SocialService = Depends()) -> FileResponse:
+    social = await service.find_one(user_id=uuid, detail='Social page does not exist')
+    return FileResponse(service.get_avatar(social))
+
+
+@router.put(
+    '/{uuid}/socials/avatar',
+    response_model=SocialRead,
+    dependencies=[Depends(get_admin_user)],
+    responses={
+        413: {'description': 'Too large'},
+        415: {'description': 'Unsupported file type'},
+        403: {'description': 'You are not allowed to perform this operation'},
+    },
+)
+async def update_user_avatar(uuid: UUID4 | str, file: UploadFile, service: SocialService = Depends()) -> SocialRead:
+    social = await service.find_one(user_id=uuid, detail='Social page does not exist')
+    await service.update_avatar(social, file)
+    return SocialRead.model_validate(social)
+
+
+@router.delete(
+    '/{uuid}/socials/avatar',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
+async def delete_user_avatar(uuid: UUID4 | str, service: SocialService = Depends()) -> None:
+    social = await service.find_one(user_id=uuid, detail='Social page does not exist')
+    await service.delete_avatar(social)

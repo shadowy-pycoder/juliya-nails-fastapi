@@ -27,6 +27,8 @@ class Config(BaseSettings):
     root_dir: Path = Path(__file__).resolve().parent
     upload_dir: str = 'static/images/'
     default_avatar: str = 'default.jpg'
+    image_size: int = 2097152
+    accepted_file_types: list[str] = ["image/png", "image/jpeg", "image/jpg", "png", "jpeg", "jpg"]
 
 
 config = Config()

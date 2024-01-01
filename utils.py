@@ -3,8 +3,9 @@ from pathlib import Path
 import secrets
 
 import aiofiles
+from fastapi import status, HTTPException, UploadFile
+import filetype  # type: ignore[import-untyped]
 from PIL import Image
-from fastapi import UploadFile
 
 from config import config
 
@@ -20,18 +21,31 @@ PATTERNS = {
 }
 
 
+def get_image(filename: str, path: str = 'posts') -> Path:
+    return config.root_dir / config.upload_dir / path / filename
+
+
 async def _save_image_to_disk(path: Path, image: memoryview) -> None:
     async with aiofiles.open(path, "wb") as f:
         await f.write(image)
 
 
-async def save_image(file: UploadFile, path: str = 'posts') -> str:
+async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
     f_ext = Path(file.filename).suffix if file.filename else '.jpg'
     filename = secrets.token_hex(8) + f_ext
     img_path = config.root_dir / config.upload_dir / path
     img_path.mkdir(parents=True, exist_ok=True)
     img_path = img_path / filename
+    detected_content_type = filetype.guess(file.file).extension.lower()
+    if file.content_type not in config.accepted_file_types or detected_content_type not in config.accepted_file_types:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail='Unsupported file type',
+        )
     buffer = BytesIO(await file.read())
+    size = buffer.getbuffer().nbytes
+    if size > config.image_size:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='Too large')
     if path != 'posts':
         output_size = (150, 150)
         img = Image.open(buffer)
@@ -43,7 +57,7 @@ async def save_image(file: UploadFile, path: str = 'posts') -> str:
     return filename
 
 
-def delete_image(filename: str, path: str = 'posts') -> None:
+def delete_image(filename: str, *, path: str = 'posts') -> None:
     if filename != config.default_avatar:
         img_path = config.root_dir / config.upload_dir / path / filename
         Path.unlink(img_path, missing_ok=True)
