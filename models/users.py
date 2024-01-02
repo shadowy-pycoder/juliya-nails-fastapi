@@ -9,6 +9,7 @@ from models.base import BaseDBModel
 
 if TYPE_CHECKING:
     from models.socials import SocialMedia
+    from models.posts import Post
 
 
 class User(BaseDBModel):
@@ -21,6 +22,9 @@ class User(BaseDBModel):
     confirmed_on: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
     active: so.Mapped[bool] = so.mapped_column(nullable=False, default=True, server_default='true')
     admin: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
+    posts: so.WriteOnlyMapped['Post'] = so.relationship(
+        back_populates='author', cascade="all, delete-orphan", passive_deletes=True
+    )
     socials: so.Mapped['SocialMedia'] = so.relationship(back_populates='user', cascade="all, delete-orphan", lazy='joined')
 
     @property

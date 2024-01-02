@@ -6,7 +6,7 @@ from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 
 from api import router_v1
-
+from config import config
 from services.redis import get_redis
 
 
@@ -24,4 +24,4 @@ async def internal_exception_handler(request: Request, exc: Exception) -> JSONRe
 
 @app.on_event("startup")
 async def startup() -> None:
-    FastAPICache.init(RedisBackend(get_redis()), prefix="fastapi-cache", expire=60)
+    FastAPICache.init(RedisBackend(get_redis()), prefix="fastapi-cache", expire=config.cache_expire)

@@ -61,6 +61,10 @@ class BaseService(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
         return result
 
+    async def find_many(self, **filter_by: Any) -> list[BaseSchemaType]:
+        result = await self.session.scalars(sa.select(self.model).filter_by(**filter_by))
+        return [self.schema.model_validate(item) for item in result.all()]
+
     async def create(self, values: BaseSchemaCreateType) -> BaseModelType:
         new_instance = self.model(**values.model_dump())
         self.session.add(new_instance)
@@ -74,9 +78,10 @@ class BaseService(
         values: (
             BaseSchemaUpdateType | BaseSchemaUpdatePartialType | BaseSchemaAdminUpdateType | BaseSchemaAdminUpdatePartialType
         ),
-        partial: bool = False,
+        exclude_unset: bool = False,
+        exclude_none: bool = False,
     ) -> BaseModelType:
-        instance.update(values.model_dump(exclude_unset=partial))
+        instance.update(values.model_dump(exclude_unset=exclude_unset, exclude_none=exclude_none))
         await self.session.commit()
         await self.session.refresh(instance)
         return instance

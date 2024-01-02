@@ -22,6 +22,12 @@ from schemas.base import BaseFilter
 from utils import PATTERNS
 
 
+def get_url(path: str, uuid: UUID4 | str) -> str:
+    from api.v1.users import router
+
+    return router.url_path_for(f'get_user_{path}', uuid=uuid)
+
+
 class BaseUser(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     email: Annotated[EmailStr, Field(max_length=100)]
@@ -39,10 +45,13 @@ class UserRead(BaseUser):
 
     @computed_field  # type: ignore[misc]
     @cached_property
-    def socials(self) -> str:
-        from api.v1.users import router
+    def posts(self) -> str:
+        return get_url('posts', self.uuid)
 
-        return router.url_path_for('get_user_socials', uuid=self.uuid)
+    @computed_field  # type: ignore[misc]
+    @cached_property
+    def socials(self) -> str:
+        return get_url('socials', self.uuid)
 
 
 class UserCreate(BaseUser):
@@ -141,7 +150,7 @@ class UserAdminUpdatePartial(BaseModel):
 
 class UserInfoSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    uuid: UUID4 | str
+    uuid: Annotated[UUID4, AfterValidator(lambda x: str(x))] | str
     username: str
 
     @computed_field  # type: ignore[misc]

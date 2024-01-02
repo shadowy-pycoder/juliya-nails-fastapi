@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import Annotated
 
 from fastapi_filter.contrib.sqlalchemy import Filter
-from pydantic import UUID4
+from pydantic import UUID4, AfterValidator
 
 
 class BaseFilter(Filter):
-    uuid: UUID4 | str | None = None
+    uuid: Annotated[UUID4, AfterValidator(lambda x: str(x))] | str | None = None
     created: datetime | None = None
     created__gt: datetime | None = None
     created__gte: datetime | None = None

@@ -22,7 +22,13 @@ PATTERNS = {
 
 
 def get_image(filename: str, path: str = 'posts') -> Path:
-    return config.root_dir / config.upload_dir / path / filename
+    img_path = config.root_dir / config.upload_dir / path / filename
+    if not Path.exists(img_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Image not found',
+        )
+    return img_path
 
 
 async def _save_image_to_disk(path: Path, image: memoryview) -> None:
@@ -37,6 +43,7 @@ async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
     img_path.mkdir(parents=True, exist_ok=True)
     img_path = img_path / filename
     detected_content_type = filetype.guess(file.file).extension.lower()
+
     if file.content_type not in config.accepted_file_types or detected_content_type not in config.accepted_file_types:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,

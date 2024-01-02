@@ -4,7 +4,6 @@ from fastapi import UploadFile
 
 from config import config
 from models.socials import SocialMedia
-from services.base import BaseService
 from schemas.socials import (
     SocialRead,
     SocialCreate,
@@ -14,6 +13,7 @@ from schemas.socials import (
     SocialAdminUpdatePartial,
     SocialFilter,
 )
+from services.base import BaseService
 from utils import get_image, save_image, delete_image
 
 

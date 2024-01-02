@@ -15,7 +15,7 @@ class SocialMedia(BaseDBModel):
         pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
     )
     user: so.Mapped[User] = so.relationship(back_populates='socials', lazy='joined')
-    avatar: so.Mapped[str] = so.mapped_column(sa.String(20), nullable=False, default='default.jpg')
+    avatar: so.Mapped[str] = so.mapped_column(sa.String(50), nullable=False, default='default.jpg')
     first_name: so.Mapped[str] = so.mapped_column(sa.String(50), nullable=True)
     last_name: so.Mapped[str] = so.mapped_column(sa.String(50), nullable=True)
     phone_number: so.Mapped[str] = so.mapped_column(sa.String(50), unique=True, nullable=True)

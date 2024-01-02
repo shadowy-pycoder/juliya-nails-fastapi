@@ -1,8 +1,8 @@
 import sqlalchemy as sa
 
-from .base import BaseService
 from models.users import User
 from schemas.users import UserRead, UserCreate, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial, UserFilter
+from services.base import BaseService
 
 
 class UserService(

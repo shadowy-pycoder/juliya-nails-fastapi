@@ -29,6 +29,7 @@ class Config(BaseSettings):
     default_avatar: str = 'default.jpg'
     image_size: int = 2097152
     accepted_file_types: list[str] = ["image/png", "image/jpeg", "image/jpg", "png", "jpeg", "jpg"]
+    cache_expire: int = 60
 
 
 config = Config()

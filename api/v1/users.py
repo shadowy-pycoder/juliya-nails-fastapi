@@ -7,8 +7,10 @@ from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, verify_credentials
 from models.users import User
+from schemas.posts import PostRead
 from schemas.socials import SocialRead, SocialAdminUpdate, SocialAdminUpdatePartial, SocialUpdate, SocialUpdatePartial
 from schemas.users import UserRead, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial, UserFilter
+from services.posts import PostService
 from services.socials import SocialService
 from services.users import UserService
 
@@ -47,8 +49,14 @@ async def patch_me(
     user_data: UserUpdatePartial, current_user: User = Depends(get_current_user), service: UserService = Depends()
 ) -> UserRead:
     await verify_credentials(current_user, user_data, service)
-    user = await service.update(current_user, user_data, partial=True)
+    user = await service.update(current_user, user_data, exclude_unset=True)
     return UserRead.model_validate(user)
+
+
+@router.get('/me/posts', response_model=list[PostRead])
+@cache()
+async def get_my_posts(user: User = Depends(get_current_user), service: PostService = Depends()) -> list[PostRead]:
+    return await service.find_many(author_id=user.uuid)
 
 
 @router.get('/me/socials', response_model=SocialRead)
@@ -75,7 +83,7 @@ async def update_my_socials(
 async def patch_my_socials(
     social_data: SocialUpdatePartial, user: User = Depends(get_current_user), service: SocialService = Depends()
 ) -> SocialRead:
-    social = await service.update(user.socials, social_data, partial=True)
+    social = await service.update(user.socials, social_data, exclude_unset=True)
     return SocialRead.model_validate(social)
 
 
@@ -133,7 +141,7 @@ async def update_one(uuid: UUID4 | str, user_data: UserAdminUpdate, service: Use
 async def patch_one(uuid: UUID4 | str, user_data: UserAdminUpdatePartial, service: UserService = Depends()) -> UserRead:
     user = await service.find_by_uuid(uuid, detail='User does not exist')
     await verify_credentials(user, user_data, service)
-    user = await service.update(user, user_data, partial=True)
+    user = await service.update(user, user_data, exclude_unset=True)
     return UserRead.model_validate(user)
 
 
@@ -151,13 +159,22 @@ async def delete_one(uuid: UUID4 | str, service: UserService = Depends()) -> Non
 
 
 @router.get(
+    '/{uuid}/posts',
+    response_model=list[PostRead],
+)
+@cache()
+async def get_user_posts(uuid: UUID4 | str, service: PostService = Depends()) -> list[PostRead]:
+    return await service.find_many(author_id=uuid)
+
+
+@router.get(
     '/{uuid}/socials',
     response_model=SocialRead,
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 @cache()
-async def get_user_socials(uuid: UUID4, service: SocialService = Depends()) -> SocialRead:
+async def get_user_socials(uuid: UUID4 | str, service: SocialService = Depends()) -> SocialRead:
     social = await service.find_one(user_id=uuid, detail='Social page does not exist')
     return SocialRead.model_validate(social)
 
@@ -186,7 +203,7 @@ async def patch_user_socials(
     uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, service: SocialService = Depends()
 ) -> SocialRead:
     social = await service.find_one(user_id=uuid, detail='Social page does not exist')
-    social = await service.update(social, social_data, partial=True)
+    social = await service.update(social, social_data, exclude_unset=True)
     return SocialRead.model_validate(social)
 
 
