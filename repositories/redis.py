@@ -23,7 +23,7 @@ def get_redis() -> aioredis.Redis:
     return aioredis.Redis(connection_pool=pool)
 
 
-class RedisService:
+class RedisRepository:
     def __init__(self, redis: aioredis.Redis = Depends(get_redis)) -> None:
         self.redis = redis
         self.fernet = Fernet(config.encrypt_key)

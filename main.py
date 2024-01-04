@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api import router_v1
 from config import config
-from services.redis import get_redis
+from repositories.redis import get_redis
 
 
 app = FastAPI(title='JuliyaNails', description='Beauty master service', version='1.0.0')

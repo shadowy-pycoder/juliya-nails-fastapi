@@ -8,8 +8,9 @@ from pydantic import BaseModel, UUID4, Field, computed_field, AfterValidator, Co
 
 
 from models.posts import Post
-from schemas.base import BaseFilter
+from schemas.base import BaseFilter, UUIDstr
 from schemas.users import UserInfoSchema
+from utils import get_url
 
 
 class BasePost(BaseModel):
@@ -28,13 +29,11 @@ class PostRead(BasePost):
     @computed_field  # type: ignore[misc]
     @cached_property
     def url(self) -> str:
-        from api.v1.posts import router
-
-        return router.url_path_for('get_one', uuid=self.uuid)
+        return get_url('posts', uuid=self.uuid)
 
 
 class PostCreate(BasePost):
-    author_id: UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
+    author_id: UUIDstr
 
 
 class PostUpdatePartial(BaseModel):

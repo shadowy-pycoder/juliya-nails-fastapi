@@ -8,18 +8,18 @@ from passlib.hash import bcrypt
 from pydantic import ValidationError
 
 from models.users import User
+from repositories.users import UserRepository
 from schemas.auth import UserPayload, Token
 from schemas.users import UserCreate
-from services.users import UserService
 from config import config
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
 
 
-class AuthService:
-    def __init__(self, service: UserService = Depends()) -> None:
-        self.service = service
+class AuthRepository:
+    def __init__(self, repo: UserRepository = Depends()) -> None:
+        self.repo = repo
 
     @classmethod
     def verify_password(cls, plain_password: str, hashed_password: str) -> bool:
@@ -85,7 +85,7 @@ class AuthService:
         return token
 
     async def register_user(self, user_data: UserCreate) -> User:
-        return await self.service.create(user_data)
+        return await self.repo.create(user_data)
 
     async def get_token(self, form_data: OAuth2PasswordRequestForm) -> tuple[Token, User]:
         exception = HTTPException(
@@ -94,7 +94,7 @@ class AuthService:
             headers={'WWW-Authenticate': 'Bearer'},
         )
         try:
-            user = await self.service.find_one(username=form_data.username)
+            user = await self.repo.find_one(username=form_data.username)
         except HTTPException:
             raise exception from None
         if not self.verify_password(form_data.password, user.hashed_password):
@@ -104,9 +104,9 @@ class AuthService:
         return Token(access_token=access_token, refresh_token=refresh_token), user
 
     async def get_refresh_token(self, token: str) -> tuple[Token, User]:
-        user_payload = AuthService.validate_token(token, refresh_token=True)
+        user_payload = AuthRepository.validate_token(token, refresh_token=True)
         try:
-            user = await self.service.find_by_uuid(user_payload.uuid)
+            user = await self.repo.find_by_uuid(user_payload.uuid)
         except HTTPException:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

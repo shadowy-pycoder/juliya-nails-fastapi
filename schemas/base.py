@@ -1,8 +1,11 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, TypeAlias
+import uuid  # noqa: F401
 
 from fastapi_filter.contrib.sqlalchemy import Filter
 from pydantic import UUID4, AfterValidator
+
+UUIDstr: TypeAlias = UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
 
 
 class BaseFilter(Filter):

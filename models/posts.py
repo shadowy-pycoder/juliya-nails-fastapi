@@ -11,7 +11,7 @@ from models.users import User
 class Post(BaseDBModel):
     __tablename__ = 'post'
 
-    title: so.Mapped[str] = so.mapped_column(sa.String(100), nullable=False)
+    title: so.Mapped[str] = so.mapped_column(sa.String(100), unique=True, nullable=False)
     image: so.Mapped[str] = so.mapped_column(sa.String(50), nullable=False)
     content: so.Mapped[str] = so.mapped_column(sa.Text, nullable=False)
     author_id: so.Mapped[UUID] = so.mapped_column(

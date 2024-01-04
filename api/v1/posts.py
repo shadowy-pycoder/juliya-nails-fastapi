@@ -9,8 +9,8 @@ from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user
 from models.users import User
+from repositories.posts import PostRepository
 from schemas.posts import PostRead, PostCreate, PostFilter, PostAdminUpdate, PostAdminUpdatePartial
-from services.posts import PostService
 
 
 router = APIRouter(
@@ -38,25 +38,25 @@ async def create_one(
     image: UploadFile,
     content: Annotated[str, Form(min_length=2)],
     user: User = Depends(get_current_user),
-    service: PostService = Depends(),
+    repo: PostRepository = Depends(),
 ) -> PostRead:
-    filename = await service.save_post_image(image)
+    filename = await repo.save_post_image(image)
     post_schema = PostCreate(author_id=user.uuid, title=title, image=filename, content=content)
-    post = await service.create(post_schema)
+    post = await repo.create(post_schema)
     response.headers['Location'] = router.url_path_for('get_one', uuid=post.uuid)
     return PostRead.model_validate(post)
 
 
 @router.get('/', response_model=Page[PostRead])
 @cache()
-async def get_all(post_filter: PostFilter = FilterDepends(PostFilter), service: PostService = Depends()) -> Page[PostRead]:
-    return await service.find_all(post_filter)
+async def get_all(post_filter: PostFilter = FilterDepends(PostFilter), repo: PostRepository = Depends()) -> Page[PostRead]:
+    return await repo.find_all(post_filter)
 
 
 @router.get('/{uuid}', response_model=PostRead)
 @cache()
-async def get_one(uuid: UUID4, service: PostService = Depends()) -> PostRead:
-    post = await service.find_by_uuid(uuid, detail='Post does not exist')
+async def get_one(uuid: UUID4 | str, repo: PostRepository = Depends()) -> PostRead:
+    post = await repo.find_by_uuid(uuid, detail='Post does not exist')
     return PostRead.model_validate(post)
 
 
@@ -66,9 +66,9 @@ async def get_one(uuid: UUID4, service: PostService = Depends()) -> PostRead:
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def get_post_image(uuid: UUID4 | str, service: PostService = Depends()) -> FileResponse:
-    post = await service.find_by_uuid(uuid, detail='Post does not exist')
-    return FileResponse(service.get_post_image(post))
+async def get_post_image(uuid: UUID4 | str, repo: PostRepository = Depends()) -> FileResponse:
+    post = await repo.find_by_uuid(uuid, detail='Post does not exist')
+    return FileResponse(repo.get_post_image(post))
 
 
 @router.put(
@@ -86,12 +86,12 @@ async def update_one(
     title: Annotated[str, Form(min_length=2, max_length=100)],
     image: UploadFile,
     content: Annotated[str, Form(min_length=2)],
-    service: PostService = Depends(),
+    repo: PostRepository = Depends(),
 ) -> PostRead:
-    post = await service.find_by_uuid(uuid, detail='Post does not exist')
-    filename = await service.save_post_image(image)
+    post = await repo.find_by_uuid(uuid, detail='Post does not exist')
+    filename = await repo.save_post_image(image)
     post_schema = PostAdminUpdate(title=title, image=filename, content=content)
-    post = await service.update(post, post_schema)
+    post = await repo.update(post, post_schema)
     return PostRead.model_validate(post)
 
 
@@ -110,12 +110,12 @@ async def patch_one(
     title: Annotated[str | None, Form(min_length=2, max_length=100)] = None,
     image: UploadFile = File(None),
     content: Annotated[str | None, Form(min_length=2)] = None,
-    service: PostService = Depends(),
+    repo: PostRepository = Depends(),
 ) -> PostRead:
-    post = await service.find_by_uuid(uuid, detail='Post does not exist')
-    filename = await service.save_post_image(image) if image else None
+    post = await repo.find_by_uuid(uuid, detail='Post does not exist')
+    filename = await repo.save_post_image(image) if image else None
     post_schema = PostAdminUpdatePartial(title=title, image=filename, content=content)
-    post = await service.update(post, post_schema, exclude_none=True)
+    post = await repo.update(post, post_schema, exclude_none=True)
     return PostRead.model_validate(post)
 
 
@@ -125,6 +125,6 @@ async def patch_one(
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def delete_one(uuid: UUID4 | str, service: PostService = Depends()) -> None:
-    post = await service.find_by_uuid(uuid, detail='Post does not exist')
-    await service.delete(post)
+async def delete_one(uuid: UUID4 | str, repo: PostRepository = Depends()) -> None:
+    post = await repo.find_by_uuid(uuid, detail='Post does not exist')
+    await repo.delete(post)

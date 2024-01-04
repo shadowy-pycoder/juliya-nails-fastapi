@@ -2,15 +2,13 @@ from __future__ import annotations
 from datetime import datetime
 from functools import cached_property
 from typing import Annotated
-import uuid  # noqa: F401
 
-from pydantic import BaseModel, UUID4, Field, computed_field, AfterValidator, ConfigDict, field_validator
-
+from pydantic import BaseModel, UUID4, Field, computed_field, ConfigDict, field_validator
 
 from models.socials import SocialMedia
-from schemas.base import BaseFilter
+from schemas.base import BaseFilter, UUIDstr
 from schemas.users import UserInfoSchema
-from utils import PATTERNS
+from utils import PATTERNS, get_url
 
 
 class BaseSocial(BaseModel):
@@ -28,11 +26,13 @@ class BaseSocial(BaseModel):
     about: Annotated[str | None, Field(max_length=255)] = None
 
     @field_validator('first_name', 'last_name', mode='after')
+    @classmethod
     def capitalize(cls, v: str) -> str | None:
         return v.capitalize() if v else None
 
 
 class SocialRead(BaseSocial):
+    model_config = ConfigDict(from_attributes=True)
     uuid: UUID4 | str
     user: UserInfoSchema
     avatar: str
@@ -42,13 +42,11 @@ class SocialRead(BaseSocial):
     @computed_field  # type: ignore[misc]
     @cached_property
     def url(self) -> str:
-        from api.v1.socials import router
-
-        return router.url_path_for('get_one', uuid=self.uuid)
+        return get_url('socials', uuid=self.uuid)
 
 
 class SocialCreate(BaseSocial):
-    user_id: UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
+    user_id: UUIDstr
 
 
 class SocialUpdatePartial(BaseSocial):

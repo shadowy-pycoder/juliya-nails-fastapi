@@ -5,8 +5,8 @@ from fastapi_pagination.links import Page
 from pydantic import UUID4
 
 from api.v1.dependencies import get_current_user, get_admin_user, get_active_user
+from repositories.socials import SocialRepository
 from schemas.socials import SocialRead, SocialFilter, SocialAdminUpdate, SocialAdminUpdatePartial
-from services.socials import SocialService
 
 
 router = APIRouter(
@@ -25,9 +25,9 @@ router = APIRouter(
 )
 @cache()
 async def get_all(
-    social_filter: SocialFilter = FilterDepends(SocialFilter), service: SocialService = Depends()
+    social_filter: SocialFilter = FilterDepends(SocialFilter), repo: SocialRepository = Depends()
 ) -> Page[SocialRead]:
-    return await service.find_all(social_filter)
+    return await repo.find_all(social_filter)
 
 
 @router.get(
@@ -37,8 +37,8 @@ async def get_all(
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 @cache()
-async def get_one(uuid: UUID4, service: SocialService = Depends()) -> SocialRead:
-    social = await service.find_by_uuid(uuid, detail='Social page does not exist')
+async def get_one(uuid: UUID4, repo: SocialRepository = Depends()) -> SocialRead:
+    social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
     return SocialRead.model_validate(social)
 
 
@@ -48,9 +48,9 @@ async def get_one(uuid: UUID4, service: SocialService = Depends()) -> SocialRead
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, service: SocialService = Depends()) -> SocialRead:
-    social = await service.find_by_uuid(uuid, detail='Social page does not exist')
-    social = await service.update(social, social_data)
+async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: SocialRepository = Depends()) -> SocialRead:
+    social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
+    social = await repo.update(social, social_data)
     return SocialRead.model_validate(social)
 
 
@@ -60,9 +60,9 @@ async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, service:
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, service: SocialService = Depends()) -> SocialRead:
-    social = await service.find_by_uuid(uuid, detail='Social page does not exist')
-    social = await service.update(social, social_data, exclude_unset=True)
+async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, repo: SocialRepository = Depends()) -> SocialRead:
+    social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
+    social = await repo.update(social, social_data, exclude_unset=True)
     return SocialRead.model_validate(social)
 
 
@@ -72,6 +72,6 @@ async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, se
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def delete_one(uuid: UUID4 | str, service: SocialService = Depends()) -> None:
-    social = await service.find_by_uuid(uuid, detail='Social page does not exist')
-    await service.delete(social)
+async def delete_one(uuid: UUID4 | str, repo: SocialRepository = Depends()) -> None:
+    social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
+    await repo.delete(social)

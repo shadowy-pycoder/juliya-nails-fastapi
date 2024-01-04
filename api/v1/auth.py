@@ -3,13 +3,12 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
+from repositories.auth import AuthRepository
+from repositories.redis import RedisRepository
+from repositories.socials import SocialRepository
 from schemas.auth import Token
 from schemas.socials import SocialCreate
 from schemas.users import UserRead, UserCreate
-from services.auth import AuthService
-from services.redis import RedisService
-from services.socials import SocialService
-from services.users import UserService
 
 
 router = APIRouter(
@@ -21,41 +20,33 @@ router = APIRouter(
 @router.post('/register', response_model=UserRead, response_model_exclude_defaults=True)
 async def register(
     user_data: UserCreate,
-    auth_service: AuthService = Depends(),
-    user_service: UserService = Depends(),
-    social_service: SocialService = Depends(),
+    auth_repo: AuthRepository = Depends(),
+    social_repo: SocialRepository = Depends(),
 ) -> UserRead:
-    errors = []
-    if username_err := await user_service.verify_username(user_data.username):
-        errors.append(username_err)
-    if email_err := await user_service.verify_email(user_data.email):
-        errors.append(email_err)
-    if errors:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail='\n'.join(e for e in errors))
-    user = await auth_service.register_user(user_data)
-    await social_service.create(SocialCreate(user_id=user.uuid))
+    user = await auth_repo.register_user(user_data)
+    await social_repo.create(SocialCreate(user_id=user.uuid))
     return UserRead.model_validate(user)
 
 
 @router.post('/token', response_model=Token)
 async def token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    auth_service: AuthService = Depends(),
-    redis_service: RedisService = Depends(),
+    auth_repo: AuthRepository = Depends(),
+    redis_repo: RedisRepository = Depends(),
 ) -> Token:
-    token, user = await auth_service.get_token(form_data)
-    await redis_service.send_token(token.refresh_token, user.uuid)
+    token, user = await auth_repo.get_token(form_data)
+    await redis_repo.send_token(token.refresh_token, user.uuid)
     return token
 
 
 @router.post("/refresh", response_model=Token, responses={401: {'description': 'Unauthorized'}})
 async def refresh_access_token(
     refresh_token: str = Header(),
-    auth_service: AuthService = Depends(),
-    redis_service: RedisService = Depends(),
+    auth_repo: AuthRepository = Depends(),
+    redis_repo: RedisRepository = Depends(),
 ) -> Token:
-    token, user = await auth_service.get_refresh_token(token=refresh_token)
-    redis_token = await redis_service.get_token(user.uuid)
+    token, user = await auth_repo.get_refresh_token(token=refresh_token)
+    redis_token = await redis_repo.get_token(user.uuid)
     if not redis_token or token.refresh_token != redis_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -68,11 +59,11 @@ async def refresh_access_token(
 @router.post("/revoke", responses={401: {'description': 'Unauthorized'}}, response_class=JSONResponse)
 async def revoke_refresh_token(
     refresh_token: str = Header(),
-    auth_service: AuthService = Depends(),
-    redis_service: RedisService = Depends(),
+    auth_repo: AuthRepository = Depends(),
+    redis_repo: RedisRepository = Depends(),
 ) -> JSONResponse:
-    user = auth_service.validate_token(refresh_token, refresh_token=True)
-    await redis_service.delete_token(user.uuid)
+    user = auth_repo.validate_token(refresh_token, refresh_token=True)
+    await redis_repo.delete_token(user.uuid)
     return JSONResponse(
         status_code=status.HTTP_200_OK, content=jsonable_encoder({'OK': 'refresh token has been successfully revoked'})
     )

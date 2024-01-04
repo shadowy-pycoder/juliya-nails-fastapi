@@ -13,12 +13,12 @@ from schemas.socials import (
     SocialAdminUpdatePartial,
     SocialFilter,
 )
-from services.base import BaseService
+from repositories.base import BaseRepository
 from utils import get_image, save_image, delete_image
 
 
-class SocialService(
-    BaseService[
+class SocialRepository(
+    BaseRepository[
         SocialMedia,
         SocialRead,
         SocialCreate,

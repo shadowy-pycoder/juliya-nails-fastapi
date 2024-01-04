@@ -18,14 +18,8 @@ from pydantic import (
 )
 
 from models.users import User
-from schemas.base import BaseFilter
-from utils import PATTERNS
-
-
-def get_url(path: str, uuid: UUID4 | str) -> str:
-    from api.v1.users import router
-
-    return router.url_path_for(f'get_user_{path}', uuid=uuid)
+from schemas.base import BaseFilter, UUIDstr
+from utils import PATTERNS, get_url
 
 
 class BaseUser(BaseModel):
@@ -35,7 +29,7 @@ class BaseUser(BaseModel):
 
 
 class UserRead(BaseUser):
-    uuid: UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
+    uuid: UUIDstr
     created: datetime
     updated: datetime
     confirmed: bool
@@ -45,13 +39,18 @@ class UserRead(BaseUser):
 
     @computed_field  # type: ignore[misc]
     @cached_property
+    def entries(self) -> str:
+        return get_url('users', 'get_user_entries', uuid=self.uuid)
+
+    @computed_field  # type: ignore[misc]
+    @cached_property
     def posts(self) -> str:
-        return get_url('posts', self.uuid)
+        return get_url('users', 'get_user_posts', uuid=self.uuid)
 
     @computed_field  # type: ignore[misc]
     @cached_property
     def socials(self) -> str:
-        return get_url('socials', self.uuid)
+        return get_url('users', 'get_user_socials', uuid=self.uuid)
 
 
 class UserCreate(BaseUser):
@@ -90,6 +89,7 @@ class UserUpdate(UserCreate):
 
 
 class UserUpdatePartial(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
     username: Annotated[str | None, Field(min_length=2, max_length=20, pattern=PATTERNS['username'])] = None
     password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
@@ -138,6 +138,7 @@ class UserAdminUpdate(BaseUser):
 
 
 class UserAdminUpdatePartial(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
     username: Annotated[str | None, Field(min_length=2, max_length=20)] = None
     password: Annotated[str | None, Field(exclude=True, min_length=8)] = None

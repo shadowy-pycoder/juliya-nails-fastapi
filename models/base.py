@@ -4,11 +4,17 @@ from uuid import UUID, uuid4
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID as pg_UUID
+import sqlalchemy.orm as so
 from sqlalchemy.sql import func
 
-import sqlalchemy.orm as so
-
 from database import Base
+
+association_table = sa.Table(
+    'association_table',
+    Base.metadata,
+    sa.Column('entry_id', pg_UUID(as_uuid=True), sa.ForeignKey('entry.uuid', ondelete='CASCADE')),
+    sa.Column('service_id', pg_UUID(as_uuid=True), sa.ForeignKey('service.uuid', ondelete='SET NULL')),
+)
 
 
 class BaseDBModel(Base):

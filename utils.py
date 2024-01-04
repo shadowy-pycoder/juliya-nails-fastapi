@@ -1,9 +1,11 @@
+from importlib import import_module
 from io import BytesIO
 from pathlib import Path
 import secrets
+from typing import Any
 
 import aiofiles
-from fastapi import status, HTTPException, UploadFile
+from fastapi import status, HTTPException, UploadFile, APIRouter
 import filetype  # type: ignore[import-untyped]
 from PIL import Image
 
@@ -19,6 +21,16 @@ PATTERNS = {
     'phone_number': r'^\+(?:[0-9] ?){6,14}[0-9]$',
     'name': r'([A-ZÀ-ÿ][-,a-z. \']+[ ]*)+',
 }
+
+
+def get_url(
+    module_name: str,
+    endpoint: str = 'get_one',
+    **path_params: Any,
+) -> str:
+    module = import_module(f'api.v1.{module_name}')
+    router: APIRouter = getattr(module, 'router')
+    return router.url_path_for(endpoint, **path_params)
 
 
 def get_image(filename: str, path: str = 'posts') -> Path:

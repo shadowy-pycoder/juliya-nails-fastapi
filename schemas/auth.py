@@ -1,13 +1,15 @@
 from uuid import UUID
-from typing import Annotated
-from pydantic import BaseModel, ConfigDict, field_validator, UUID4, AfterValidator
+from pydantic import BaseModel, ConfigDict, field_validator
+
+from schemas.base import UUIDstr
 
 
 class UserPayload(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    uuid: UUID4 | Annotated[str, AfterValidator(lambda x: UUID(x, version=4))]
+    uuid: UUIDstr
 
     @field_validator('uuid')
+    @classmethod
     def stringify_token(cls, v: UUID) -> str:
         return str(v)
 
