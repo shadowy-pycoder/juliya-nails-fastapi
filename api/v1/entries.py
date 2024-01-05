@@ -118,7 +118,6 @@ async def patch_one_admin(
 @router.delete(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def delete_one(entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()) -> None:
