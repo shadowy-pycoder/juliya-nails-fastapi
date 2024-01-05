@@ -14,6 +14,10 @@ class UserPayload(BaseModel):
         return str(v)
 
 
+class VerifyUserRequest(BaseModel):
+    token: str
+
+
 class Token(BaseModel):
     access_token: str
     refresh_token: str

@@ -1,25 +1,46 @@
 from datetime import datetime, timedelta
+from typing import Any
 
 
 from fastapi import HTTPException, status, Depends
+from fastapi.background import BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 from jose import jwt, JWTError
 from passlib.hash import bcrypt
 from pydantic import ValidationError
 
-from models.users import User
-from repositories.users import UserRepository
-from schemas.auth import UserPayload, Token
-from schemas.users import UserCreate
 from config import config
+from models.users import User
+from repositories.email import EmailRepository
+from repositories.socials import SocialRepository
+from repositories.users import UserRepository
+from schemas.auth import UserPayload, Token, VerifyUserRequest
+from schemas.socials import SocialCreate
+from schemas.users import UserCreate, UserAdminUpdatePartial
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
 
 
 class AuthRepository:
-    def __init__(self, repo: UserRepository = Depends()) -> None:
-        self.repo = repo
+    secret_key = config.secret_key
+    secret_salt = config.secret_salt
+    token_expiration = config.confirm_expiration
+    jwt_expiration = config.jwt_expiration
+    jwt_refresh_expiration = config.jwt_refresh_expiration
+    jwt_secret_key = config.jwt_secret_key
+    jwt_algorithm = config.jwt_algorithm
+
+    def __init__(
+        self,
+        user_repo: UserRepository = Depends(),
+        email_repo: EmailRepository = Depends(),
+        social_repo: SocialRepository = Depends(),
+    ) -> None:
+        self.user_repo = user_repo
+        self.email_repo = email_repo
+        self.social_repo = social_repo
 
     @classmethod
     def verify_password(cls, plain_password: str, hashed_password: str) -> bool:
@@ -40,7 +61,7 @@ class AuthRepository:
                 headers={'WWW-Authenticate': 'Bearer'},
             )
         try:
-            payload = jwt.decode(token, config.jwt_secret_key, algorithms=[config.jwt_algorithm])
+            payload = jwt.decode(token, cls.jwt_secret_key, algorithms=[cls.jwt_algorithm])
         except JWTError:
             raise exception from None
         user_data = payload.get('user')
@@ -64,10 +85,10 @@ class AuthRepository:
         user_data = UserPayload.model_validate(user)
         now = datetime.utcnow()
         if refresh_token:
-            expiration = timedelta(seconds=config.jwt_refresh_expiration)
+            expiration = timedelta(seconds=cls.jwt_refresh_expiration)
             access = False
         else:
-            expiration = timedelta(seconds=config.jwt_expiration)
+            expiration = timedelta(seconds=cls.jwt_expiration)
             access = True
         payload = {
             'iat': now,
@@ -79,13 +100,17 @@ class AuthRepository:
         }
         token = jwt.encode(
             payload,
-            config.jwt_secret_key,
-            algorithm=config.jwt_algorithm,
+            cls.jwt_secret_key,
+            algorithm=cls.jwt_algorithm,
         )
         return token
 
-    async def register_user(self, user_data: UserCreate) -> User:
-        return await self.repo.create(user_data)
+    async def register_user(self, user_data: UserCreate, background_tasks: BackgroundTasks) -> User:
+        user = await self.user_repo.create(user_data)
+        await self.social_repo.create(SocialCreate(user_id=user.uuid))
+        token = self.generate_verification_token(user)
+        await self.email_repo.send_confirmation_email(user, token, background_tasks)
+        return user
 
     async def get_token(self, form_data: OAuth2PasswordRequestForm) -> tuple[Token, User]:
         exception = HTTPException(
@@ -94,7 +119,7 @@ class AuthRepository:
             headers={'WWW-Authenticate': 'Bearer'},
         )
         try:
-            user = await self.repo.find_one(username=form_data.username)
+            user = await self.user_repo.find_one(username=form_data.username)
         except HTTPException:
             raise exception from None
         if not self.verify_password(form_data.password, user.hashed_password):
@@ -106,7 +131,7 @@ class AuthRepository:
     async def get_refresh_token(self, token: str) -> tuple[Token, User]:
         user_payload = AuthRepository.validate_token(token, refresh_token=True)
         try:
-            user = await self.repo.find_by_uuid(user_payload.uuid)
+            user = await self.user_repo.find_by_uuid(user_payload.uuid)
         except HTTPException:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -115,3 +140,43 @@ class AuthRepository:
             ) from None
         access_token = self.create_token(user)
         return Token(access_token=access_token, refresh_token=token), user
+
+    def generate_verification_token(self, instance: User, context: str = 'confirm') -> str | bytes:
+        serializer = URLSafeTimedSerializer(self.secret_key)
+        return serializer.dumps({context: str(instance.uuid)}, salt=self.secret_salt)
+
+    def valid_verification_token(
+        self,
+        instance: User,
+        token: str | bytes,
+        context: str = 'confirm',
+    ) -> bool:
+        serializer = URLSafeTimedSerializer(self.secret_key)
+        try:
+            data: dict[str, Any] = serializer.loads(
+                token,
+                salt=self.secret_salt,
+                max_age=self.token_expiration,
+            )
+        except BadSignature:
+            return False
+        except Exception:
+            return False
+        if data.get(context) != str(instance.uuid):
+            return False
+        return True
+
+    async def activate_user_account(
+        self,
+        instance: User,
+        data: VerifyUserRequest,
+        background_tasks: BackgroundTasks,
+    ) -> User:
+        if instance.confirmed:
+            raise HTTPException(status_code=400, detail='Account already confirmed.')
+        if not self.valid_verification_token(instance, data.token):
+            raise HTTPException(status_code=400, detail='The confirmation link is invalid or has expired.')
+        user_data = UserAdminUpdatePartial(confirmed=True, confirmed_on=datetime.utcnow())
+        user = await self.user_repo.update(instance, user_data, exclude_unset=True)
+        await self.email_repo.send_welcome_email(user, background_tasks)
+        return user

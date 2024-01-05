@@ -1,13 +1,14 @@
-from fastapi import Depends, APIRouter, HTTPException, status, Header
+from fastapi import Depends, APIRouter, HTTPException, status, Header, Response
+from fastapi.background import BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
+from api.v1.dependencies import get_current_user
+from models.users import User
 from repositories.auth import AuthRepository
 from repositories.redis import RedisRepository
-from repositories.socials import SocialRepository
-from schemas.auth import Token
-from schemas.socials import SocialCreate
+from schemas.auth import Token, VerifyUserRequest
 from schemas.users import UserRead, UserCreate
 
 
@@ -17,15 +18,39 @@ router = APIRouter(
 )
 
 
-@router.post('/register', response_model=UserRead, response_model_exclude_defaults=True)
+@router.post('/register', status_code=status.HTTP_201_CREATED, response_model=UserRead)
 async def register(
+    response: Response,
     user_data: UserCreate,
+    background_tasks: BackgroundTasks,
     auth_repo: AuthRepository = Depends(),
-    social_repo: SocialRepository = Depends(),
 ) -> UserRead:
-    user = await auth_repo.register_user(user_data)
-    await social_repo.create(SocialCreate(user_id=user.uuid))
+    from api import users_router_v1
+
+    user = await auth_repo.register_user(user_data, background_tasks)
+    response.headers['Location'] = users_router_v1.url_path_for('get_one', uuid=user.uuid)
     return UserRead.model_validate(user)
+
+
+@router.post(
+    '/confirm',
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+    responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
+)
+async def confirm_account(
+    data: VerifyUserRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    auth_repo: AuthRepository = Depends(),
+) -> JSONResponse:
+    await auth_repo.activate_user_account(user, data, background_tasks)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'code': 200, 'msg': 'Account has been confirmed successfully.'},
+        ),
+    )
 
 
 @router.post('/token', response_model=Token)
@@ -40,7 +65,7 @@ async def token(
 
 
 @router.post(
-    "/refresh",
+    '/refresh',
     response_model=Token,
     responses={401: {'description': 'Unauthorized'}},
 )
@@ -61,7 +86,7 @@ async def refresh_access_token(
 
 
 @router.post(
-    "/revoke",
+    '/revoke',
     response_class=JSONResponse,
     responses={401: {'description': 'Unauthorized'}},
 )
@@ -73,5 +98,8 @@ async def revoke_refresh_token(
     user = auth_repo.validate_token(refresh_token, refresh_token=True)
     await redis_repo.delete_token(user.uuid)
     return JSONResponse(
-        status_code=status.HTTP_200_OK, content=jsonable_encoder({'OK': 'refresh token has been successfully revoked'})
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'msg': 'refresh token has been successfully revoked'},
+        ),
     )

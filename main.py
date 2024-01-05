@@ -9,7 +9,11 @@ from api import router_v1
 from config import config
 from repositories.redis import get_redis, RateLimitMiddleware
 
-app = FastAPI(title='JuliyaNails', description='Beauty master service', version='1.0.0')
+app = FastAPI(
+    title=config.app_name,
+    description=config.description,
+    version=config.version,
+)
 app.include_router(
     router_v1,
     responses={
@@ -25,7 +29,10 @@ app.add_middleware(RateLimitMiddleware)
 @app.exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
 async def internal_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=jsonable_encoder({"code": 500, "msg": "Internal Server Error"})
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=jsonable_encoder(
+            {'code': 500, 'msg': 'Internal Server Error'},
+        ),
     )
 
 

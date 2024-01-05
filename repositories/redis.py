@@ -9,7 +9,6 @@ from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from starlette.middleware.base import BaseHTTPMiddleware
 
-
 from config import config
 
 
@@ -33,7 +32,7 @@ def get_redis() -> aioredis.Redis:
 class RedisRepository:
     def __init__(self, redis: aioredis.Redis = Depends(get_redis)) -> None:
         self.redis = redis
-        self.fernet = Fernet(config.encrypt_key)
+        self.fernet = Fernet(config.secret_key)
 
     def encrypt_token(self, token: str) -> bytes:
         return self.fernet.encrypt(token.encode('utf-8'))
