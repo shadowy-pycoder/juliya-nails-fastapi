@@ -12,7 +12,7 @@ from schemas.socials import SocialRead, SocialFilter, SocialAdminUpdate, SocialA
 router = APIRouter(
     prefix='/api/v1/socials',
     tags=['socials'],
-    dependencies=[Depends(get_current_user), Depends(get_active_user)],
+    dependencies=[Depends(get_current_user), Depends(get_active_user), Depends(get_admin_user)],
     responses={404: {'description': 'Not found'}, 401: {'description': 'Unauthorized'}},
 )
 
@@ -20,7 +20,6 @@ router = APIRouter(
 @router.get(
     '/',
     response_model=Page[SocialRead],
-    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 @cache()
@@ -33,7 +32,6 @@ async def get_all(
 @router.get(
     '/{uuid}',
     response_model=SocialRead,
-    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 @cache()
@@ -45,7 +43,6 @@ async def get_one(uuid: UUID4, repo: SocialRepository = Depends()) -> SocialRead
 @router.put(
     '/{uuid}',
     response_model=SocialRead,
-    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: SocialRepository = Depends()) -> SocialRead:
@@ -57,7 +54,6 @@ async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: So
 @router.patch(
     '/{uuid}',
     response_model=SocialRead,
-    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, repo: SocialRepository = Depends()) -> SocialRead:
@@ -69,7 +65,6 @@ async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, re
 @router.delete(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def delete_one(uuid: UUID4 | str, repo: SocialRepository = Depends()) -> None:

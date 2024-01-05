@@ -38,6 +38,7 @@ class EntryRead(BaseModel):
     timestamp: float
     duration: Decimal
     ending_time: float
+    completed: bool
 
     @computed_field  # type: ignore[misc]
     @cached_property
@@ -60,11 +61,11 @@ class EntryUpdate(BaseEntry):
 
 
 class EntryAdminUpdatePartial(EntryUpdatePartial):
-    pass
+    completed: bool | None = None
 
 
 class EntryAdminUpdate(EntryUpdate):
-    pass
+    completed: bool
 
 
 class EntryInfo(BaseModel):
@@ -72,6 +73,7 @@ class EntryInfo(BaseModel):
 
     date: date_
     time: time_
+    completed: bool
 
 
 class EntryFilter(BaseFilter):
@@ -100,6 +102,7 @@ class EntryFilter(BaseFilter):
     ending_time__gte: float | None = None
     ending_time__lt: float | None = None
     ending_time__lte: float | None = None
+    completed: bool | None = None
 
     class Constants(BaseFilter.Constants):
         model = Entry

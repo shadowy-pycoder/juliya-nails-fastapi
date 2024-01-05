@@ -24,9 +24,7 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     response_model=ServiceRead,
     dependencies=[Depends(get_admin_user)],
-    responses={
-        403: {'description': 'You are not allowed to perform this operation'},
-    },
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def create_one(
     response: Response,
@@ -53,7 +51,12 @@ async def get_one(uuid: UUID4, repo: ServiceRepository = Depends()) -> ServiceRe
     return ServiceRead.model_validate(service)
 
 
-@router.get('/{uuid}/entries', response_model=Page[EntryRead])
+@router.get(
+    '/{uuid}/entries',
+    response_model=Page[EntryRead],
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
 @cache()
 async def get_service_entries(
     uuid: UUID4, service_repo: ServiceRepository = Depends(), entry_repo: EntryRepository = Depends()

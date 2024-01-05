@@ -9,7 +9,16 @@ from api.v1.dependencies import get_current_user, get_admin_user, get_active_use
 from models.entries import Entry
 from models.users import User
 from repositories.entries import EntryRepository
-from schemas.entries import EntryRead, EntryCreate, EntryFilter, EntryUpdate, EntryUpdatePartial, EntryInfo
+from schemas.entries import (
+    EntryRead,
+    EntryCreate,
+    EntryFilter,
+    EntryUpdate,
+    EntryUpdatePartial,
+    EntryAdminUpdate,
+    EntryAdminUpdatePartial,
+    EntryInfo,
+)
 
 
 router = APIRouter(
@@ -80,9 +89,36 @@ async def patch_one(
     return EntryRead.model_validate(entry)
 
 
+@router.put(
+    '/{uuid}/edit',
+    response_model=EntryRead,
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
+async def update_one_admin(
+    entry_data: EntryAdminUpdate, entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()
+) -> EntryRead:
+    entry = await repo.update(entry, entry_data)
+    return EntryRead.model_validate(entry)
+
+
+@router.patch(
+    '/{uuid}/edit',
+    response_model=EntryRead,
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
+async def patch_one_admin(
+    entry_data: EntryAdminUpdatePartial, entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()
+) -> EntryRead:
+    entry = await repo.update(entry, entry_data, exclude_unset=True)
+    return EntryRead.model_validate(entry)
+
+
 @router.delete(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def delete_one(entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()) -> None:

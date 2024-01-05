@@ -11,6 +11,8 @@ from PIL import Image
 
 from config import config
 
+HTTP_403_FORBIDDEN = HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You are not allowed to perform this operation')
+
 PATTERNS = {
     'username': r'^[A-Za-z][A-Za-z0-9_.]*$',
     'youtube': r'(https?:\/\/)?(?:www.)?youtu((\.be)|(be\..{2,5}))\/((user)|(channel))\/',

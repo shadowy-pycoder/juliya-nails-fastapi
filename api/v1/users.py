@@ -25,7 +25,12 @@ router = APIRouter(
 )
 
 
-@router.get('/', response_model=Page[UserRead])
+@router.get(
+    '/',
+    response_model=Page[UserRead],
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
 @cache()
 async def get_all(user_filter: UserFilter = FilterDepends(UserFilter), repo: UserRepository = Depends()) -> Page[UserRead]:
     return await repo.find_all(user_filter)
@@ -118,7 +123,12 @@ async def delete_my_avatar(user: User = Depends(get_current_user), repo: SocialR
     await repo.delete_avatar(user.socials)
 
 
-@router.get('/{uuid}', response_model=UserRead)
+@router.get(
+    '/{uuid}',
+    response_model=UserRead,
+    dependencies=[Depends(get_admin_user)],
+    responses={403: {'description': 'You are not allowed to perform this operation'}},
+)
 @cache()
 async def get_one(uuid: UUID4 | str, repo: UserRepository = Depends()) -> UserRead:
     user = await repo.find_by_uuid(uuid, detail='User does not exist')
@@ -228,12 +238,7 @@ async def patch_user_socials(
     return SocialRead.model_validate(social)
 
 
-@router.get(
-    '/{uuid}/socials/avatar',
-    response_class=FileResponse,
-    dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
-)
+@router.get('/{uuid}/socials/avatar', response_class=FileResponse)
 async def get_user_avatar(uuid: UUID4 | str, repo: SocialRepository = Depends()) -> FileResponse:
     social = await repo.find_one(user_id=uuid, detail='Social page does not exist')
     return FileResponse(repo.get_avatar(social))

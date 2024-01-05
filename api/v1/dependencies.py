@@ -7,6 +7,7 @@ from repositories.auth import oauth2_scheme, AuthRepository
 from repositories.entries import EntryRepository
 from repositories.users import UserRepository
 from schemas.users import UserRead
+from utils import HTTP_403_FORBIDDEN
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), repo: UserRepository = Depends()) -> User:
@@ -16,7 +17,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), repo: UserReposi
 
 def get_admin_user(user: UserRead = Depends(get_current_user)) -> UserRead:
     if not user.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You are not allowed to perform this operation')
+        raise HTTP_403_FORBIDDEN
     return user
 
 
@@ -28,6 +29,7 @@ def get_active_user(user: UserRead = Depends(get_current_user)) -> UserRead:
 
 async def validate_entry(uuid: UUID4 | str, repo: EntryRepository = Depends(), user: User = Depends(get_current_user)) -> Entry:
     entry = await repo.find_by_uuid(uuid, detail='Entry does not exist')
-    if not (entry.user == user or user.admin):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You are not allowed to perform this operation')
+    if not user.admin:
+        if entry.user != user or entry.completed:
+            raise HTTP_403_FORBIDDEN
     return entry

@@ -60,12 +60,7 @@ async def get_one(uuid: UUID4 | str, repo: PostRepository = Depends()) -> PostRe
     return PostRead.model_validate(post)
 
 
-@router.get(
-    '/{uuid}/image',
-    response_class=FileResponse,
-    dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
-)
+@router.get('/{uuid}/image', response_class=FileResponse)
 async def get_post_image(uuid: UUID4 | str, repo: PostRepository = Depends()) -> FileResponse:
     post = await repo.find_by_uuid(uuid, detail='Post does not exist')
     return FileResponse(repo.get_post_image(post))
