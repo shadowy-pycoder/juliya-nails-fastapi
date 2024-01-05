@@ -25,13 +25,15 @@ router = APIRouter(
     prefix='/api/v1/entries',
     tags=['entries'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
-    responses={404: {'description': 'Not found'}, 401: {'description': 'Unauthorized'}},
 )
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=EntryRead)
 async def create_one(
-    response: Response, entry_data: EntryCreate, repo: EntryRepository = Depends(), user: User = Depends(get_current_user)
+    response: Response,
+    entry_data: EntryCreate,
+    repo: EntryRepository = Depends(),
+    user: User = Depends(get_current_user),
 ) -> EntryRead:
     entry = await repo.create(entry_data, user_id=user.uuid)
     response.headers['Location'] = router.url_path_for('get_one', uuid=entry.uuid)
@@ -71,7 +73,9 @@ async def get_one(entry: Entry = Depends(validate_entry)) -> EntryRead:
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def update_one(
-    entry_data: EntryUpdate, entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()
+    entry_data: EntryUpdate,
+    entry: Entry = Depends(validate_entry),
+    repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data)
     return EntryRead.model_validate(entry)
@@ -83,7 +87,9 @@ async def update_one(
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def patch_one(
-    entry_data: EntryUpdatePartial, entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()
+    entry_data: EntryUpdatePartial,
+    entry: Entry = Depends(validate_entry),
+    repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data, exclude_unset=True)
     return EntryRead.model_validate(entry)
@@ -96,7 +102,9 @@ async def patch_one(
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def update_one_admin(
-    entry_data: EntryAdminUpdate, entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()
+    entry_data: EntryAdminUpdate,
+    entry: Entry = Depends(validate_entry),
+    repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data)
     return EntryRead.model_validate(entry)
@@ -109,7 +117,9 @@ async def update_one_admin(
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def patch_one_admin(
-    entry_data: EntryAdminUpdatePartial, entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()
+    entry_data: EntryAdminUpdatePartial,
+    entry: Entry = Depends(validate_entry),
+    repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data, exclude_unset=True)
     return EntryRead.model_validate(entry)
@@ -120,5 +130,8 @@ async def patch_one_admin(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def delete_one(entry: Entry = Depends(validate_entry), repo: EntryRepository = Depends()) -> None:
+async def delete_one(
+    entry: Entry = Depends(validate_entry),
+    repo: EntryRepository = Depends(),
+) -> None:
     await repo.delete(entry)

@@ -12,8 +12,11 @@ from schemas.socials import SocialRead, SocialFilter, SocialAdminUpdate, SocialA
 router = APIRouter(
     prefix='/api/v1/socials',
     tags=['socials'],
-    dependencies=[Depends(get_current_user), Depends(get_active_user), Depends(get_admin_user)],
-    responses={404: {'description': 'Not found'}, 401: {'description': 'Unauthorized'}},
+    dependencies=[
+        Depends(get_current_user),
+        Depends(get_active_user),
+        Depends(get_admin_user),
+    ],
 )
 
 

@@ -17,7 +17,6 @@ router = APIRouter(
     prefix='/api/v1/posts',
     tags=['posts'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
-    responses={404: {'description': 'Not found'}, 401: {'description': 'Unauthorized'}},
 )
 
 
@@ -49,13 +48,19 @@ async def create_one(
 
 @router.get('/', response_model=Page[PostRead])
 @cache()
-async def get_all(post_filter: PostFilter = FilterDepends(PostFilter), repo: PostRepository = Depends()) -> Page[PostRead]:
+async def get_all(
+    post_filter: PostFilter = FilterDepends(PostFilter),
+    repo: PostRepository = Depends(),
+) -> Page[PostRead]:
     return await repo.find_all(post_filter)
 
 
 @router.get('/{uuid}', response_model=PostRead)
 @cache()
-async def get_one(uuid: UUID4 | str, repo: PostRepository = Depends()) -> PostRead:
+async def get_one(
+    uuid: UUID4 | str,
+    repo: PostRepository = Depends(),
+) -> PostRead:
     post = await repo.find_by_uuid(uuid, detail='Post does not exist')
     return PostRead.model_validate(post)
 

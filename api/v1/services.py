@@ -15,7 +15,6 @@ router = APIRouter(
     prefix='/api/v1/services',
     tags=['services'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
-    responses={404: {'description': 'Not found'}, 401: {'description': 'Unauthorized'}},
 )
 
 
@@ -39,7 +38,8 @@ async def create_one(
 @router.get('/', response_model=Page[ServiceRead])
 @cache()
 async def get_all(
-    service_filter: ServiceFilter = FilterDepends(ServiceFilter), repo: ServiceRepository = Depends()
+    service_filter: ServiceFilter = FilterDepends(ServiceFilter),
+    repo: ServiceRepository = Depends(),
 ) -> Page[ServiceRead]:
     return await repo.find_all(service_filter)
 
@@ -59,7 +59,9 @@ async def get_one(uuid: UUID4, repo: ServiceRepository = Depends()) -> ServiceRe
 )
 @cache()
 async def get_service_entries(
-    uuid: UUID4, service_repo: ServiceRepository = Depends(), entry_repo: EntryRepository = Depends()
+    uuid: UUID4,
+    service_repo: ServiceRepository = Depends(),
+    entry_repo: EntryRepository = Depends(),
 ) -> Page[EntryRead]:
     service = await service_repo.find_by_uuid(uuid)
     return await entry_repo.find_many(service.entries)
@@ -71,7 +73,11 @@ async def get_service_entries(
     dependencies=[Depends(get_admin_user)],
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
-async def update_one(uuid: UUID4 | str, service_data: ServiceAdminUpdate, repo: ServiceRepository = Depends()) -> ServiceRead:
+async def update_one(
+    uuid: UUID4 | str,
+    service_data: ServiceAdminUpdate,
+    repo: ServiceRepository = Depends(),
+) -> ServiceRead:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')
     service = await repo.update(service, service_data)
     return ServiceRead.model_validate(service)
@@ -84,7 +90,9 @@ async def update_one(uuid: UUID4 | str, service_data: ServiceAdminUpdate, repo: 
     responses={403: {'description': 'You are not allowed to perform this operation'}},
 )
 async def patch_one(
-    uuid: UUID4 | str, service_data: ServiceAdminUpdatePartial, repo: ServiceRepository = Depends()
+    uuid: UUID4 | str,
+    service_data: ServiceAdminUpdatePartial,
+    repo: ServiceRepository = Depends(),
 ) -> ServiceRead:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')
     service = await repo.update(service, service_data, exclude_unset=True)

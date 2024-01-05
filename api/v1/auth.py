@@ -39,7 +39,11 @@ async def token(
     return token
 
 
-@router.post("/refresh", response_model=Token, responses={401: {'description': 'Unauthorized'}})
+@router.post(
+    "/refresh",
+    response_model=Token,
+    responses={401: {'description': 'Unauthorized'}},
+)
 async def refresh_access_token(
     refresh_token: str = Header(),
     auth_repo: AuthRepository = Depends(),
@@ -56,7 +60,11 @@ async def refresh_access_token(
     return token
 
 
-@router.post("/revoke", responses={401: {'description': 'Unauthorized'}}, response_class=JSONResponse)
+@router.post(
+    "/revoke",
+    response_class=JSONResponse,
+    responses={401: {'description': 'Unauthorized'}},
+)
 async def revoke_refresh_token(
     refresh_token: str = Header(),
     auth_repo: AuthRepository = Depends(),

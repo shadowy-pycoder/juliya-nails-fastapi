@@ -30,6 +30,8 @@ class Config(BaseSettings):
     image_size: int = 2097152
     accepted_file_types: list[str] = ["image/png", "image/jpeg", "image/jpg", "png", "jpeg", "jpg"]
     cache_expire: int = 60
+    max_requests: int = 5
+    max_requests_window: int = 60
 
 
 config = Config()

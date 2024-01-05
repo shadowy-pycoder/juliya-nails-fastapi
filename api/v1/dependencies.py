@@ -10,7 +10,10 @@ from schemas.users import UserRead
 from utils import HTTP_403_FORBIDDEN
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), repo: UserRepository = Depends()) -> User:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    repo: UserRepository = Depends(),
+) -> User:
     user_payload = AuthRepository.validate_token(token)
     return await repo.find_by_uuid(user_payload.uuid)
 
@@ -27,7 +30,11 @@ def get_active_user(user: UserRead = Depends(get_current_user)) -> UserRead:
     return user
 
 
-async def validate_entry(uuid: UUID4 | str, repo: EntryRepository = Depends(), user: User = Depends(get_current_user)) -> Entry:
+async def validate_entry(
+    uuid: UUID4 | str,
+    repo: EntryRepository = Depends(),
+    user: User = Depends(get_current_user),
+) -> Entry:
     entry = await repo.find_by_uuid(uuid, detail='Entry does not exist')
     if not user.admin:
         if entry.user != user or entry.completed:

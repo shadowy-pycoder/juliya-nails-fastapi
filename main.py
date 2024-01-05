@@ -7,12 +7,19 @@ from fastapi.responses import JSONResponse
 
 from api import router_v1
 from config import config
-from repositories.redis import get_redis
-
+from repositories.redis import get_redis, RateLimitMiddleware
 
 app = FastAPI(title='JuliyaNails', description='Beauty master service', version='1.0.0')
-app.include_router(router_v1)
+app.include_router(
+    router_v1,
+    responses={
+        404: {'description': 'Not found'},
+        401: {'description': 'Unauthorized'},
+        429: {'description': 'Too many requests'},
+    },
+)
 add_pagination(app)
+app.add_middleware(RateLimitMiddleware)
 
 
 @app.exception_handler(status.HTTP_500_INTERNAL_SERVER_ERROR)
