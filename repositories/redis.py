@@ -87,7 +87,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if await self.rate_limiter.is_rate_limited(key, self.max_requests, self.window):
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                content=jsonable_encoder({'code': 429, 'msg': 'Too many requests'}),
+                content=jsonable_encoder({'code': 429, 'message': 'Too many requests'}),
             )
         response = await call_next(request)
         return response

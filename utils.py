@@ -1,3 +1,4 @@
+from enum import Enum
 from importlib import import_module
 from io import BytesIO
 from pathlib import Path
@@ -23,6 +24,11 @@ PATTERNS = {
     'phone_number': r'^\+(?:[0-9] ?){6,14}[0-9]$',
     'name': r'([A-ZÀ-ÿ][-,a-z. \']+[ ]*)+',
 }
+
+
+class AccountAction(str, Enum):
+    ACTIVATE = 'activate'
+    CHANGE = 'change'
 
 
 def get_url(

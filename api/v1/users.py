@@ -1,12 +1,14 @@
 from fastapi import APIRouter, status, Depends, HTTPException, UploadFile
+from fastapi.background import BackgroundTasks
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
 from fastapi_pagination.links import Page
 from fastapi.responses import FileResponse
 from pydantic import UUID4
 
-from api.v1.dependencies import get_current_user, get_admin_user, get_active_user
+from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, get_confirmed_user
 from models.users import User
+from repositories.auth import AuthRepository
 from repositories.entries import EntryRepository
 from repositories.posts import PostRepository
 from repositories.socials import SocialRepository
@@ -47,24 +49,43 @@ async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
 @router.put('/me', response_model=UserRead)
 async def update_me(
     user_data: UserUpdate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    repo: UserRepository = Depends(),
+    user_repo: UserRepository = Depends(),
+    auth_repo: AuthRepository = Depends(),
 ) -> UserRead:
-    user = await repo.update(current_user, user_data)
+    user = await user_repo.update_with_confirmation(
+        current_user,
+        user_data,
+        auth_repo,
+        background_tasks,
+    )
     return UserRead.model_validate(user)
 
 
 @router.patch('/me', response_model=UserRead)
 async def patch_me(
     user_data: UserUpdatePartial,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    repo: UserRepository = Depends(),
+    user_repo: UserRepository = Depends(),
+    auth_repo: AuthRepository = Depends(),
 ) -> UserRead:
-    user = await repo.update(current_user, user_data, exclude_unset=True)
+    user = await user_repo.update_with_confirmation(
+        current_user,
+        user_data,
+        auth_repo,
+        background_tasks,
+        exclude_unset=True,
+    )
     return UserRead.model_validate(user)
 
 
-@router.get('/me/entries', response_model=Page[EntryRead])
+@router.get(
+    '/me/entries',
+    response_model=Page[EntryRead],
+    dependencies=[Depends(get_confirmed_user)],
+)
 @cache()
 async def get_my_entries(
     user: User = Depends(get_current_user),
@@ -91,6 +112,7 @@ async def get_my_socials(user: User = Depends(get_current_user)) -> SocialRead:
 @router.put(
     '/me/socials',
     response_model=SocialRead,
+    dependencies=[Depends(get_confirmed_user)],
 )
 async def update_my_socials(
     social_data: SocialUpdate,
@@ -104,6 +126,7 @@ async def update_my_socials(
 @router.patch(
     '/me/socials',
     response_model=SocialRead,
+    dependencies=[Depends(get_confirmed_user)],
 )
 async def patch_my_socials(
     social_data: SocialUpdatePartial,
@@ -128,6 +151,7 @@ async def get_my_avatar(
 @router.put(
     '/me/socials/avatar',
     response_model=SocialRead,
+    dependencies=[Depends(get_confirmed_user)],
     responses={413: {'description': 'Too large'}, 415: {'description': 'Unsupported file type'}},
 )
 async def update_my_avatar(
@@ -139,7 +163,11 @@ async def update_my_avatar(
     return SocialRead.model_validate(user.socials)
 
 
-@router.delete('/me/socials/avatar', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    '/me/socials/avatar',
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_confirmed_user)],
+)
 async def delete_my_avatar(
     user: User = Depends(get_current_user),
     repo: SocialRepository = Depends(),
@@ -226,6 +254,7 @@ async def get_user_entries(
 @router.get(
     '/{uuid}/posts',
     response_model=Page[PostRead],
+    dependencies=[Depends(get_confirmed_user)],
 )
 @cache()
 async def get_user_posts(
@@ -284,7 +313,11 @@ async def patch_user_socials(
     return SocialRead.model_validate(social)
 
 
-@router.get('/{uuid}/socials/avatar', response_class=FileResponse)
+@router.get(
+    '/{uuid}/socials/avatar',
+    response_class=FileResponse,
+    dependencies=[Depends(get_confirmed_user)],
+)
 async def get_user_avatar(
     uuid: UUID4 | str,
     repo: SocialRepository = Depends(),

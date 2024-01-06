@@ -10,6 +10,7 @@ from repositories.auth import AuthRepository
 from repositories.redis import RedisRepository
 from schemas.auth import Token, VerifyUserRequest
 from schemas.users import UserRead, UserCreate
+from utils import AccountAction
 
 
 router = APIRouter(
@@ -33,22 +34,101 @@ async def register(
 
 
 @router.post(
-    '/confirm',
+    '/resend-activation',
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+    responses={400: {'description': 'Account already confirmed.'}},
+)
+async def resend_activation(
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    auth_repo: AuthRepository = Depends(),
+) -> JSONResponse:
+    await auth_repo.resend_confirmation(
+        user,
+        background_tasks,
+        context=AccountAction.ACTIVATE,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'code': 200, 'message': 'New confirmation email has been sent.'},
+        ),
+    )
+
+
+@router.post(
+    '/resend-confirmation',
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+    responses={400: {'description': 'Account already confirmed.'}},
+)
+async def resend_change_confirmation(
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    auth_repo: AuthRepository = Depends(),
+) -> JSONResponse:
+    await auth_repo.resend_confirmation(
+        user,
+        background_tasks,
+        context=AccountAction.CHANGE,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'code': 200, 'message': 'New confirmation email has been sent.'},
+        ),
+    )
+
+
+@router.post(
+    '/activate',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
     responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
 )
-async def confirm_account(
+async def activate_account(
     data: VerifyUserRequest,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     auth_repo: AuthRepository = Depends(),
 ) -> JSONResponse:
-    await auth_repo.activate_user_account(user, data, background_tasks)
+    await auth_repo.activate_user_account(
+        user,
+        data,
+        background_tasks,
+        context=AccountAction.ACTIVATE,
+    )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'msg': 'Account has been confirmed successfully.'},
+            {'code': 200, 'message': 'Account has been confirmed successfully.'},
+        ),
+    )
+
+
+@router.post(
+    '/confirm-change',
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+    responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
+)
+async def confirm_change(
+    data: VerifyUserRequest,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(get_current_user),
+    auth_repo: AuthRepository = Depends(),
+) -> JSONResponse:
+    await auth_repo.activate_user_account(
+        user,
+        data,
+        background_tasks,
+        context=AccountAction.CHANGE,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'code': 200, 'message': 'Account has been updated successfully.'},
         ),
     )
 
@@ -100,6 +180,6 @@ async def revoke_refresh_token(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'msg': 'refresh token has been successfully revoked'},
+            {'message': 'refresh token has been successfully revoked'},
         ),
     )

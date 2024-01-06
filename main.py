@@ -31,7 +31,7 @@ async def internal_exception_handler(request: Request, exc: Exception) -> JSONRe
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=jsonable_encoder(
-            {'code': 500, 'msg': 'Internal Server Error'},
+            {'code': 500, 'message': 'Internal Server Error'},
         ),
     )
 

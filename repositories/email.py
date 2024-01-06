@@ -5,6 +5,7 @@ from fastapi_mail import MessageSchema, MessageType
 
 from config import fm, config
 from models.users import User
+from utils import AccountAction
 
 
 class EmailRepository:
@@ -29,10 +30,22 @@ class EmailRepository:
         user: User,
         token: str | bytes,
         background_tasks: BackgroundTasks,
+        *,
+        context: AccountAction,
     ) -> None:
+        if context is AccountAction.ACTIVATE:
+            subject = f'Account Activation - {config.app_name}'
+            action = 'activate account'
+        else:
+            subject = f'Email Change - {config.app_name}'
+            action = 'change email'
         activate_url = f'{config.frontend_host}/auth/confirm/{str(token)}'
-        data = {'app_name': config.app_name, 'username': user.username, 'activate_url': activate_url}
-        subject = f'Account Confirmation - {config.app_name}'
+        data = {
+            'app_name': config.app_name,
+            'username': user.username,
+            'activate_url': activate_url,
+            'action': action,
+        }
         await self.send_email(
             recipients=[user.email],
             subject=subject,

@@ -18,15 +18,24 @@ async def get_current_user(
     return await repo.find_by_uuid(user_payload.uuid)
 
 
-def get_admin_user(user: UserRead = Depends(get_current_user)) -> UserRead:
+async def get_admin_user(user: UserRead = Depends(get_current_user)) -> UserRead:
     if not user.admin:
         raise HTTP_403_FORBIDDEN
     return user
 
 
-def get_active_user(user: UserRead = Depends(get_current_user)) -> UserRead:
+async def get_active_user(user: UserRead = Depends(get_current_user)) -> UserRead:
     if not user.active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Your account is inactive. Please contact support')
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Your account is inactive. Please activate your account to proceed.',
+        )
+    return user
+
+
+async def get_confirmed_user(user: UserRead = Depends(get_current_user)) -> UserRead:
+    if not user.confirmed:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Please confirm your account to proceed')
     return user
 
 

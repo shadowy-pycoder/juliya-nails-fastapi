@@ -1,0 +1,414 @@
+{
+    "info": {
+        "name": "FastAPI API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "register",
+            "request": {
+                "url": "http://localhost:8000/api/v1/auth/register",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "resend_confirmation",
+            "request": {
+                "url": "http://localhost:8000/api/v1/auth/resend",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "confirm_account",
+            "request": {
+                "url": "http://localhost:8000/api/v1/auth/confirm",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "token",
+            "request": {
+                "url": "http://localhost:8000/api/v1/auth/token",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "refresh_access_token",
+            "request": {
+                "url": "http://localhost:8000/api/v1/auth/refresh",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "revoke_refresh_token",
+            "request": {
+                "url": "http://localhost:8000/api/v1/auth/revoke",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "create_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "get_all",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_by_date",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{date}",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{uuid}",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{uuid}",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{uuid}",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "update_one_admin",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{uuid}/edit",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_one_admin",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{uuid}/edit",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "delete_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/entries/{uuid}",
+                "method": "DELETE"
+            }
+        },
+        {
+            "name": "create_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "get_all",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/{uuid}",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_post_image",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/{uuid}/image",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/{uuid}",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/{uuid}",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "delete_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/posts/{uuid}",
+                "method": "DELETE"
+            }
+        },
+        {
+            "name": "create_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "get_all",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/{uuid}",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_service_entries",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/{uuid}/entries",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/{uuid}",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/{uuid}",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "delete_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/services/{uuid}",
+                "method": "DELETE"
+            }
+        },
+        {
+            "name": "get_all",
+            "request": {
+                "url": "http://localhost:8000/api/v1/socials/",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/socials/{uuid}",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/socials/{uuid}",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/socials/{uuid}",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "delete_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/socials/{uuid}",
+                "method": "DELETE"
+            }
+        },
+        {
+            "name": "get_all",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_me",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_me",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_me",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "get_my_entries",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/entries",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_my_posts",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/posts",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_my_socials",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/socials",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_my_socials",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/socials",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_my_socials",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/socials",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "get_my_avatar",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/socials/avatar",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_my_avatar",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/socials/avatar",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "delete_my_avatar",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/me/socials/avatar",
+                "method": "DELETE"
+            }
+        },
+        {
+            "name": "get_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "delete_one",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}",
+                "method": "DELETE"
+            }
+        },
+        {
+            "name": "get_user_entries",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/entries",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_user_posts",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/posts",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "get_user_socials",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/socials",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_user_socials",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/socials",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "patch_user_socials",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/socials",
+                "method": "PATCH"
+            }
+        },
+        {
+            "name": "get_user_avatar",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/socials/avatar",
+                "method": "GET"
+            }
+        },
+        {
+            "name": "update_user_avatar",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/socials/avatar",
+                "method": "PUT"
+            }
+        },
+        {
+            "name": "delete_user_avatar",
+            "request": {
+                "url": "http://localhost:8000/api/v1/users/{uuid}/socials/avatar",
+                "method": "DELETE"
+            }
+        }
+    ]
+}

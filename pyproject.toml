@@ -33,6 +33,9 @@ fastapi-mail = "^1.4.1"
 itsdangerous = "^2.1.2"
 
 
+[tool.poetry.group.dev.dependencies]
+fastapi2postman = "^0.1.2"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

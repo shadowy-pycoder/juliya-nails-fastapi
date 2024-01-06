@@ -21,7 +21,7 @@ class User(BaseDBModel):
     username: so.Mapped[str] = so.mapped_column(sa.String(20), unique=True, nullable=False, index=True)
     confirmed: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')
     confirmed_on: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
-    active: so.Mapped[bool] = so.mapped_column(nullable=False, default=True, server_default='true')
+    active: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')
     admin: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
     entries: so.WriteOnlyMapped['Entry'] = so.relationship(
         back_populates='user', cascade="all, delete-orphan", passive_deletes=True

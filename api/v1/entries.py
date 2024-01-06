@@ -5,7 +5,7 @@ from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
 from fastapi_pagination.links import Page
 
-from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, validate_entry
+from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, get_confirmed_user, validate_entry
 from models.entries import Entry
 from models.users import User
 from repositories.entries import EntryRepository
@@ -24,7 +24,11 @@ from schemas.entries import (
 router = APIRouter(
     prefix='/api/v1/entries',
     tags=['entries'],
-    dependencies=[Depends(get_current_user), Depends(get_active_user)],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(get_active_user),
+        Depends(get_confirmed_user),
+    ],
 )
 
 

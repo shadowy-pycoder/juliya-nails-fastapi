@@ -18,6 +18,7 @@ from repositories.users import UserRepository
 from schemas.auth import UserPayload, Token, VerifyUserRequest
 from schemas.socials import SocialCreate
 from schemas.users import UserCreate, UserAdminUpdatePartial
+from utils import AccountAction
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
@@ -108,8 +109,13 @@ class AuthRepository:
     async def register_user(self, user_data: UserCreate, background_tasks: BackgroundTasks) -> User:
         user = await self.user_repo.create(user_data)
         await self.social_repo.create(SocialCreate(user_id=user.uuid))
-        token = self.generate_verification_token(user)
-        await self.email_repo.send_confirmation_email(user, token, background_tasks)
+        token = self.generate_verification_token(user, context=AccountAction.ACTIVATE)
+        await self.email_repo.send_confirmation_email(
+            user,
+            token,
+            background_tasks,
+            context=AccountAction.ACTIVATE,
+        )
         return user
 
     async def get_token(self, form_data: OAuth2PasswordRequestForm) -> tuple[Token, User]:
@@ -141,28 +147,31 @@ class AuthRepository:
         access_token = self.create_token(user)
         return Token(access_token=access_token, refresh_token=token), user
 
-    def generate_verification_token(self, instance: User, context: str = 'confirm') -> str | bytes:
+    def generate_verification_token(self, instance: User, *, context: AccountAction) -> str | bytes:
         serializer = URLSafeTimedSerializer(self.secret_key)
-        return serializer.dumps({context: str(instance.uuid)}, salt=self.secret_salt)
+        salt = self.secret_salt + datetime.strftime(instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z').encode('utf-8')
+        return serializer.dumps({context.value: str(instance.uuid)}, salt=salt)
 
     def valid_verification_token(
         self,
         instance: User,
         token: str | bytes,
-        context: str = 'confirm',
+        *,
+        context: AccountAction,
     ) -> bool:
         serializer = URLSafeTimedSerializer(self.secret_key)
+        salt = self.secret_salt + datetime.strftime(instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z').encode('utf-8')
         try:
             data: dict[str, Any] = serializer.loads(
                 token,
-                salt=self.secret_salt,
+                salt=salt,
                 max_age=self.token_expiration,
             )
         except BadSignature:
             return False
         except Exception:
             return False
-        if data.get(context) != str(instance.uuid):
+        if data.get(context.value) != str(instance.uuid):
             return False
         return True
 
@@ -171,12 +180,41 @@ class AuthRepository:
         instance: User,
         data: VerifyUserRequest,
         background_tasks: BackgroundTasks,
+        *,
+        context: AccountAction,
     ) -> User:
         if instance.confirmed:
             raise HTTPException(status_code=400, detail='Account already confirmed.')
-        if not self.valid_verification_token(instance, data.token):
+        if not self.valid_verification_token(instance, data.token, context=context):
             raise HTTPException(status_code=400, detail='The confirmation link is invalid or has expired.')
-        user_data = UserAdminUpdatePartial(confirmed=True, confirmed_on=datetime.utcnow())
+        user_data = UserAdminUpdatePartial(confirmed=True, confirmed_on=datetime.now())
+        if context is AccountAction.ACTIVATE:
+            user_data.active = True
         user = await self.user_repo.update(instance, user_data, exclude_unset=True)
-        await self.email_repo.send_welcome_email(user, background_tasks)
+        if context is AccountAction.ACTIVATE:
+            await self.email_repo.send_welcome_email(user, background_tasks)
         return user
+
+    async def resend_confirmation(
+        self,
+        user: User,
+        background_tasks: BackgroundTasks,
+        context: AccountAction,
+    ) -> None:
+        if user.active and context is AccountAction.ACTIVATE:
+            raise HTTPException(status_code=400, detail='Account already activated.')
+        if user.confirmed and context is AccountAction.CHANGE:
+            raise HTTPException(status_code=400, detail='Account already confirmed.')
+        if not user.active and context is AccountAction.CHANGE:
+            raise HTTPException(status_code=400, detail='Please activate your account to proceed')
+        token = self.generate_verification_token(user, context=context)
+        await self.email_repo.send_confirmation_email(user, token, background_tasks, context=context)
+
+    async def change_email(self, user: User, background_tasks: BackgroundTasks) -> None:
+        token = self.generate_verification_token(user, context=AccountAction.CHANGE)
+        await self.email_repo.send_confirmation_email(
+            user,
+            token,
+            background_tasks,
+            context=AccountAction.CHANGE,
+        )
