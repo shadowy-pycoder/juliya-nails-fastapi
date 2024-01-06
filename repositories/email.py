@@ -43,7 +43,7 @@ class EmailRepository:
             action = 'change email'
             url_path = 'change-email'
             template_name = 'confirm_email.html'
-        elif context is AccountAction.FORGOT_PASSWORD:
+        elif context is AccountAction.RESET_PASSWORD:
             subject = f'Password Reset - {config.app_name}'
             action = 'reset password'
             url_path = 'reset-password'

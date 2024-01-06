@@ -52,8 +52,8 @@ class AuthRepository:
         if refresh_token:
             exception = HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
+                detail='Invalid refresh token',
+                headers={'WWW-Authenticate': 'Bearer'},
             )
         else:
             exception = HTTPException(
@@ -72,8 +72,8 @@ class AuthRepository:
         elif not refresh_token and not access:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid access token",
-                headers={"WWW-Authenticate": "Bearer"},
+                detail='Invalid access token',
+                headers={'WWW-Authenticate': 'Bearer'},
             ) from None
         try:
             user = UserPayload.model_validate(user_data)
@@ -141,8 +141,8 @@ class AuthRepository:
         except HTTPException:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
+                detail='Invalid refresh token',
+                headers={'WWW-Authenticate': 'Bearer'},
             ) from None
         access_token = self.create_token(user)
         return Token(access_token=access_token, refresh_token=token), user
@@ -184,9 +184,15 @@ class AuthRepository:
         context: AccountAction,
     ) -> User:
         if instance.confirmed:
-            raise HTTPException(status_code=400, detail='Account already confirmed.')
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Account already confirmed.',
+            )
         if not self.valid_verification_token(instance, data.token, context=context):
-            raise HTTPException(status_code=400, detail='The confirmation link is invalid or has expired.')
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='The confirmation link is invalid or has expired.',
+            )
         user_data = UserAdminUpdatePartial(confirmed=True, confirmed_on=datetime.now())
         if context is AccountAction.ACTIVATE:
             user_data.active = True
@@ -202,11 +208,20 @@ class AuthRepository:
         context: AccountAction,
     ) -> None:
         if user.active and context is AccountAction.ACTIVATE:
-            raise HTTPException(status_code=400, detail='Account already activated.')
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Account already activated.',
+            )
         if user.confirmed and context is AccountAction.CHANGE_EMAIL:
-            raise HTTPException(status_code=400, detail='Account already confirmed.')
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Account already confirmed.',
+            )
         if not user.active and context is AccountAction.CHANGE_EMAIL:
-            raise HTTPException(status_code=400, detail='Please activate your account to proceed')
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Please activate your account to proceed',
+            )
         token = self.generate_verification_token(user, context=context)
         await self.email_repo.send_confirmation_email(user, token, background_tasks, context=context)
 
@@ -242,20 +257,23 @@ class AuthRepository:
         user = await self.user_repo.find_one(detail='User does not exist', email=data.email)
         if not user.confirmed:
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Your account is not verified. Please check your email inbox to verify your account.',
             )
         if not user.active:
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail='Your account is inactive. Please activate your account to proceed.',
             )
         if not self.valid_verification_token(
             user,
             data.token,
-            context=AccountAction.FORGOT_PASSWORD,
+            context=AccountAction.RESET_PASSWORD,
         ):
-            raise HTTPException(status_code=400, detail='The confirmation link is invalid or has expired.')
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='The confirmation link is invalid or has expired.',
+            )
 
         user_data = UserAdminUpdatePartial(**data.model_dump())
         await self.user_repo.update(user, user_data, exclude_unset=True)

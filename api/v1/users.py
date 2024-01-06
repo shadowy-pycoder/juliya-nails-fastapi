@@ -6,7 +6,13 @@ from fastapi_pagination.links import Page
 from fastapi.responses import FileResponse
 from pydantic import UUID4
 
-from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, get_confirmed_user
+from api.v1.dependencies import (
+    get_current_user,
+    get_admin_user,
+    get_active_user,
+    get_confirmed_user,
+    check_disposable,
+)
 from models.users import User
 from repositories.auth import AuthRepository
 from repositories.entries import EntryRepository
@@ -46,10 +52,14 @@ async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
     return user
 
 
-@router.put('/me', response_model=UserRead)
+@router.put(
+    '/me',
+    response_model=UserRead,
+    responses={400: {'description': 'Disposable domains are not allowed'}},
+)
 async def update_me(
-    user_data: UserUpdate,
     background_tasks: BackgroundTasks,
+    user_data: UserUpdate = Depends(check_disposable),
     current_user: User = Depends(get_current_user),
     user_repo: UserRepository = Depends(),
     auth_repo: AuthRepository = Depends(),
@@ -63,10 +73,14 @@ async def update_me(
     return UserRead.model_validate(user)
 
 
-@router.patch('/me', response_model=UserRead)
+@router.patch(
+    '/me',
+    response_model=UserRead,
+    responses={400: {'description': 'Disposable domains are not allowed'}},
+)
 async def patch_me(
-    user_data: UserUpdatePartial,
     background_tasks: BackgroundTasks,
+    user_data: UserUpdatePartial = Depends(check_disposable),
     current_user: User = Depends(get_current_user),
     user_repo: UserRepository = Depends(),
     auth_repo: AuthRepository = Depends(),

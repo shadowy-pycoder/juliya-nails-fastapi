@@ -30,7 +30,7 @@ PATTERNS = {
 class AccountAction(str, Enum):
     ACTIVATE = 'activate'
     CHANGE_EMAIL = 'change-email'
-    FORGOT_PASSWORD = 'forgot-password'
+    RESET_PASSWORD = 'reset-password'
 
 
 def check_password_strength(password: str) -> None:

@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api.v1.dependencies import get_current_user
+from api.v1.dependencies import get_current_user, check_disposable
 from models.users import User
 from repositories.auth import AuthRepository
 from repositories.redis import RedisRepository
@@ -23,12 +23,13 @@ router = APIRouter(
     '/register',
     status_code=status.HTTP_201_CREATED,
     response_model=UserRead,
+    responses={400: {'description': 'Disposable domains are not allowed'}},
 )
 async def register(
     response: Response,
-    user_data: UserCreate,
     background_tasks: BackgroundTasks,
     auth_repo: AuthRepository = Depends(),
+    user_data: UserCreate = Depends(check_disposable),
 ) -> UserRead:
     from api import users_router_v1
 
@@ -141,16 +142,17 @@ async def confirm_email_change(
     '/forgot-password',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
+    responses={400: {'description': 'Disposable domains are not allowed'}},
 )
 async def forgot_password(
-    user_data: EmailRequest,
     background_tasks: BackgroundTasks,
     auth_repo: AuthRepository = Depends(),
+    user_data: EmailRequest = Depends(check_disposable),
 ) -> JSONResponse:
     await auth_repo.email_forgot_password_link(
         user_data,
         background_tasks,
-        context=AccountAction.FORGOT_PASSWORD,
+        context=AccountAction.RESET_PASSWORD,
     )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -167,8 +169,8 @@ async def forgot_password(
     responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
 )
 async def reset_password(
-    data: ResetRequest,
     auth_repo: AuthRepository = Depends(),
+    data: ResetRequest = Depends(check_disposable),
 ) -> JSONResponse:
     await auth_repo.reset_user_password(data)
     return JSONResponse(
@@ -205,8 +207,8 @@ async def refresh_access_token(
     if not redis_token or token.refresh_token != redis_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token.",
-            headers={"WWW-Authenticate": "Bearer"},
+            detail='Invalid refresh token.',
+            headers={'WWW-Authenticate': 'Bearer'},
         )
     return token
 
