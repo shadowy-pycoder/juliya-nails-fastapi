@@ -2,6 +2,7 @@ from enum import Enum
 from importlib import import_module
 from io import BytesIO
 from pathlib import Path
+import re
 import secrets
 from typing import Any
 
@@ -28,7 +29,24 @@ PATTERNS = {
 
 class AccountAction(str, Enum):
     ACTIVATE = 'activate'
-    CHANGE = 'change'
+    CHANGE_EMAIL = 'change-email'
+    FORGOT_PASSWORD = 'forgot-password'
+
+
+def check_password_strength(password: str) -> None:
+    message = 'Password should contain at least '
+    error_log = []
+    errors = {
+        '1 digit': re.search(r'\d', password) is None,
+        '1 uppercase letter': re.search(r'[A-Z]', password) is None,
+        '1 lowercase letter': re.search(r'[a-z]', password) is None,
+        '1 special character': re.search(r'\W', password) is None,
+    }
+    for err_msg, error in errors.items():
+        if error:
+            error_log.append(err_msg)
+    if error_log:
+        raise ValueError(message + ', '.join(err for err in error_log))
 
 
 def get_url(

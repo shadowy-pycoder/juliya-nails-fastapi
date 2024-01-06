@@ -8,7 +8,7 @@ from api.v1.dependencies import get_current_user
 from models.users import User
 from repositories.auth import AuthRepository
 from repositories.redis import RedisRepository
-from schemas.auth import Token, VerifyUserRequest
+from schemas.auth import Token, VerifyUserRequest, EmailRequest, ResetRequest
 from schemas.users import UserRead, UserCreate
 from utils import AccountAction
 
@@ -19,7 +19,11 @@ router = APIRouter(
 )
 
 
-@router.post('/register', status_code=status.HTTP_201_CREATED, response_model=UserRead)
+@router.post(
+    '/register',
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserRead,
+)
 async def register(
     response: Response,
     user_data: UserCreate,
@@ -63,7 +67,7 @@ async def resend_activation(
     response_class=JSONResponse,
     responses={400: {'description': 'Account already confirmed.'}},
 )
-async def resend_change_confirmation(
+async def resend_email_change_confirmation(
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     auth_repo: AuthRepository = Depends(),
@@ -71,7 +75,7 @@ async def resend_change_confirmation(
     await auth_repo.resend_confirmation(
         user,
         background_tasks,
-        context=AccountAction.CHANGE,
+        context=AccountAction.CHANGE_EMAIL,
     )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -113,7 +117,7 @@ async def activate_account(
     response_class=JSONResponse,
     responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
 )
-async def confirm_change(
+async def confirm_email_change(
     data: VerifyUserRequest,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
@@ -123,12 +127,54 @@ async def confirm_change(
         user,
         data,
         background_tasks,
-        context=AccountAction.CHANGE,
+        context=AccountAction.CHANGE_EMAIL,
     )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
             {'code': 200, 'message': 'Account has been updated successfully.'},
+        ),
+    )
+
+
+@router.post(
+    '/forgot-password',
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+)
+async def forgot_password(
+    user_data: EmailRequest,
+    background_tasks: BackgroundTasks,
+    auth_repo: AuthRepository = Depends(),
+) -> JSONResponse:
+    await auth_repo.email_forgot_password_link(
+        user_data,
+        background_tasks,
+        context=AccountAction.FORGOT_PASSWORD,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'code': 200, 'message': 'A email with password reset link has been sent to you.'},
+        ),
+    )
+
+
+@router.put(
+    "/reset-password",
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+    responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
+)
+async def reset_password(
+    data: ResetRequest,
+    auth_repo: AuthRepository = Depends(),
+) -> JSONResponse:
+    await auth_repo.reset_user_password(data)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {'code': 200, 'message': 'Your password has been updated.'},
         ),
     )
 

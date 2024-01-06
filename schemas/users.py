@@ -1,7 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
 from functools import cached_property
-import re
 from typing import Annotated
 
 from pydantic import (
@@ -18,7 +17,7 @@ from pydantic import (
 
 from models.users import User
 from schemas.base import BaseFilter, UUIDstr
-from utils import PATTERNS, get_url
+from utils import PATTERNS, get_url, check_password_strength
 
 
 class BaseUser(BaseModel):
@@ -27,19 +26,7 @@ class BaseUser(BaseModel):
     @field_validator('password', check_fields=False)
     @classmethod
     def validate_password(cls, v: str) -> str:
-        message = 'Password should contain at least '
-        error_log = []
-        errors = {
-            '1 digit': re.search(r'\d', v) is None,
-            '1 uppercase letter': re.search(r'[A-Z]', v) is None,
-            '1 lowercase letter': re.search(r'[a-z]', v) is None,
-            '1 special character': re.search(r'\W', v) is None,
-        }
-        for err_msg, error in errors.items():
-            if error:
-                error_log.append(err_msg)
-        if error_log:
-            raise ValueError(message + ', '.join(err for err in error_log))
+        check_password_strength(v)
         return v
 
 
@@ -92,7 +79,7 @@ class UserUpdate(UserCreate):
 class UserUpdatePartial(BaseUser):
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
     username: Annotated[str | None, Field(min_length=2, max_length=20, pattern=PATTERNS['username'])] = None
-    password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
+    password: Annotated[str | None, Field(min_length=8)] = None
     confirm_password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
 
     @model_validator(mode='after')
@@ -112,7 +99,7 @@ class UserAdminUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     email: Annotated[EmailStr, Field(max_length=100)]
     username: Annotated[str, Field(min_length=2, max_length=20)]
-    password: Annotated[str, Field(exclude=True, min_length=8)]
+    password: Annotated[str, Field(min_length=8)]
     created: datetime
     confirmed: bool
     confirmed_on: datetime
@@ -124,7 +111,7 @@ class UserAdminUpdatePartial(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
     username: Annotated[str | None, Field(min_length=2, max_length=20)] = None
-    password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
+    password: Annotated[str | None, Field(min_length=8)] = None
     created: datetime | None = None
     confirmed: bool | None = None
     confirmed_on: datetime | None = None

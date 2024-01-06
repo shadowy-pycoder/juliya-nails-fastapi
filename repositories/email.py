@@ -36,10 +36,19 @@ class EmailRepository:
         if context is AccountAction.ACTIVATE:
             subject = f'Account Activation - {config.app_name}'
             action = 'activate account'
-        else:
+            url_path = 'activate'
+            template_name = 'confirm_email.html'
+        elif context is AccountAction.CHANGE_EMAIL:
             subject = f'Email Change - {config.app_name}'
             action = 'change email'
-        activate_url = f'{config.frontend_host}/auth/confirm/{str(token)}'
+            url_path = 'change-email'
+            template_name = 'confirm_email.html'
+        elif context is AccountAction.FORGOT_PASSWORD:
+            subject = f'Password Reset - {config.app_name}'
+            action = 'reset password'
+            url_path = 'reset-password'
+            template_name = 'reset_password.html'
+        activate_url = f'{config.frontend_host}/auth/{url_path}/{str(token)}'
         data = {
             'app_name': config.app_name,
             'username': user.username,
@@ -49,7 +58,7 @@ class EmailRepository:
         await self.send_email(
             recipients=[user.email],
             subject=subject,
-            template_name='confirm_email.html',
+            template_name=template_name,
             context=data,
             background_tasks=background_tasks,
         )
@@ -59,7 +68,11 @@ class EmailRepository:
         user: User,
         background_tasks: BackgroundTasks,
     ) -> None:
-        data = {'app_name': config.app_name, 'username': user.username, 'login_url': f'{config.frontend_host}'}
+        data = {
+            'app_name': config.app_name,
+            'username': user.username,
+            'login_url': f'{config.frontend_host}',
+        }
         subject = f'Welcome - {config.app_name}'
         await self.send_email(
             recipients=[user.email],

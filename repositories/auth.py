@@ -15,7 +15,7 @@ from models.users import User
 from repositories.email import EmailRepository
 from repositories.socials import SocialRepository
 from repositories.users import UserRepository
-from schemas.auth import UserPayload, Token, VerifyUserRequest
+from schemas.auth import UserPayload, Token, VerifyUserRequest, EmailRequest, ResetRequest
 from schemas.socials import SocialCreate
 from schemas.users import UserCreate, UserAdminUpdatePartial
 from utils import AccountAction
@@ -150,7 +150,7 @@ class AuthRepository:
     def generate_verification_token(self, instance: User, *, context: AccountAction) -> str | bytes:
         serializer = URLSafeTimedSerializer(self.secret_key)
         salt = self.secret_salt + datetime.strftime(instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z').encode('utf-8')
-        return serializer.dumps({context.value: str(instance.uuid)}, salt=salt)
+        return serializer.dumps({context.value: str(instance.email)}, salt=salt)
 
     def valid_verification_token(
         self,
@@ -171,7 +171,7 @@ class AuthRepository:
             return False
         except Exception:
             return False
-        if data.get(context.value) != str(instance.uuid):
+        if data.get(context.value) != str(instance.email):
             return False
         return True
 
@@ -203,18 +203,59 @@ class AuthRepository:
     ) -> None:
         if user.active and context is AccountAction.ACTIVATE:
             raise HTTPException(status_code=400, detail='Account already activated.')
-        if user.confirmed and context is AccountAction.CHANGE:
+        if user.confirmed and context is AccountAction.CHANGE_EMAIL:
             raise HTTPException(status_code=400, detail='Account already confirmed.')
-        if not user.active and context is AccountAction.CHANGE:
+        if not user.active and context is AccountAction.CHANGE_EMAIL:
             raise HTTPException(status_code=400, detail='Please activate your account to proceed')
         token = self.generate_verification_token(user, context=context)
         await self.email_repo.send_confirmation_email(user, token, background_tasks, context=context)
 
     async def change_email(self, user: User, background_tasks: BackgroundTasks) -> None:
-        token = self.generate_verification_token(user, context=AccountAction.CHANGE)
+        token = self.generate_verification_token(user, context=AccountAction.CHANGE_EMAIL)
         await self.email_repo.send_confirmation_email(
             user,
             token,
             background_tasks,
-            context=AccountAction.CHANGE,
+            context=AccountAction.CHANGE_EMAIL,
         )
+
+    async def email_forgot_password_link(
+        self,
+        data: EmailRequest,
+        background_tasks: BackgroundTasks,
+        *,
+        context: AccountAction,
+    ) -> None:
+        try:
+            user = await self.user_repo.find_one(email=data.email)
+        except HTTPException:
+            return None
+        token = self.generate_verification_token(user, context=context)
+        await self.email_repo.send_confirmation_email(
+            user,
+            token,
+            background_tasks,
+            context=context,
+        )
+
+    async def reset_user_password(self, data: ResetRequest) -> None:
+        user = await self.user_repo.find_one(detail='User does not exist', email=data.email)
+        if not user.confirmed:
+            raise HTTPException(
+                status_code=400,
+                detail='Your account is not verified. Please check your email inbox to verify your account.',
+            )
+        if not user.active:
+            raise HTTPException(
+                status_code=400,
+                detail='Your account is inactive. Please activate your account to proceed.',
+            )
+        if not self.valid_verification_token(
+            user,
+            data.token,
+            context=AccountAction.FORGOT_PASSWORD,
+        ):
+            raise HTTPException(status_code=400, detail='The confirmation link is invalid or has expired.')
+
+        user_data = UserAdminUpdatePartial(**data.model_dump())
+        await self.user_repo.update(user, user_data, exclude_unset=True)
