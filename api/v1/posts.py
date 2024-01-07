@@ -26,9 +26,9 @@ router = APIRouter(
     response_model=PostRead,
     dependencies=[Depends(get_admin_user)],
     responses={
-        413: {'description': 'Too large'},
-        415: {'description': 'Unsupported file type'},
-        403: {'description': 'You are not allowed to perform this operation'},
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {'description': 'Too large'},
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: {'description': 'Unsupported file type'},
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
     },
 )
 async def create_one(
@@ -46,7 +46,7 @@ async def create_one(
     return PostRead.model_validate(post)
 
 
-@router.get('/', response_model=Page[PostRead])
+@router.get('/', status_code=status.HTTP_200_OK, response_model=Page[PostRead])
 @cache()
 async def get_all(
     post_filter: PostFilter = FilterDepends(PostFilter),
@@ -55,7 +55,7 @@ async def get_all(
     return await repo.find_all(post_filter)
 
 
-@router.get('/{uuid}', response_model=PostRead)
+@router.get('/{uuid}', status_code=status.HTTP_200_OK, response_model=PostRead)
 @cache()
 async def get_one(
     uuid: UUID4 | str,
@@ -65,7 +65,7 @@ async def get_one(
     return PostRead.model_validate(post)
 
 
-@router.get('/{uuid}/image', response_class=FileResponse)
+@router.get('/{uuid}/image', status_code=status.HTTP_200_OK, response_class=FileResponse)
 async def get_post_image(uuid: UUID4 | str, repo: PostRepository = Depends()) -> FileResponse:
     post = await repo.find_by_uuid(uuid, detail='Post does not exist')
     return FileResponse(repo.get_post_image(post))
@@ -73,12 +73,13 @@ async def get_post_image(uuid: UUID4 | str, repo: PostRepository = Depends()) ->
 
 @router.put(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=PostRead,
     dependencies=[Depends(get_admin_user)],
     responses={
-        413: {'description': 'Too large'},
-        415: {'description': 'Unsupported file type'},
-        403: {'description': 'You are not allowed to perform this operation'},
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {'description': 'Too large'},
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: {'description': 'Unsupported file type'},
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
     },
 )
 async def update_one(
@@ -97,12 +98,13 @@ async def update_one(
 
 @router.patch(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=PostRead,
     dependencies=[Depends(get_admin_user)],
     responses={
-        413: {'description': 'Too large'},
-        415: {'description': 'Unsupported file type'},
-        403: {'description': 'You are not allowed to perform this operation'},
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {'description': 'Too large'},
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: {'description': 'Unsupported file type'},
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
     },
 )
 async def patch_one(
@@ -123,7 +125,9 @@ async def patch_one(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def delete_one(uuid: UUID4 | str, repo: PostRepository = Depends()) -> None:
     post = await repo.find_by_uuid(uuid, detail='Post does not exist')

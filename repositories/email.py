@@ -3,7 +3,7 @@ from typing import Any
 from fastapi.background import BackgroundTasks
 from fastapi_mail import MessageSchema, MessageType
 
-from config import fm, config
+from config import config, fm
 from models.users import User
 from utils import AccountAction
 

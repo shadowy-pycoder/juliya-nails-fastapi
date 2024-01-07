@@ -5,7 +5,13 @@ from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
 from fastapi_pagination.links import Page
 
-from api.v1.dependencies import get_current_user, get_admin_user, get_active_user, get_confirmed_user, validate_entry
+from api.v1.dependencies import (
+    get_current_user,
+    get_admin_user,
+    get_active_user,
+    get_confirmed_user,
+    validate_entry,
+)
 from models.entries import Entry
 from models.users import User
 from repositories.entries import EntryRepository
@@ -46,16 +52,26 @@ async def create_one(
 
 @router.get(
     '/',
+    status_code=status.HTTP_200_OK,
     response_model=Page[EntryRead],
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
-async def get_all(entry_filter: EntryFilter = FilterDepends(EntryFilter), repo: EntryRepository = Depends()) -> Page[EntryRead]:
+async def get_all(
+    entry_filter: EntryFilter = FilterDepends(EntryFilter),
+    repo: EntryRepository = Depends(),
+) -> Page[EntryRead]:
     return await repo.find_all(entry_filter)
 
 
-@router.get('/{date}', response_model=Page[EntryInfo])
+@router.get(
+    '/{date}',
+    status_code=status.HTTP_200_OK,
+    response_model=Page[EntryInfo],
+)
 @cache()
 async def get_by_date(date: date_, repo: EntryRepository = Depends()) -> Page[EntryInfo]:
     return await repo.find_all_public(date=date)
@@ -63,8 +79,11 @@ async def get_by_date(date: date_, repo: EntryRepository = Depends()) -> Page[En
 
 @router.get(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=EntryRead,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_one(entry: Entry = Depends(validate_entry)) -> EntryRead:
@@ -73,8 +92,11 @@ async def get_one(entry: Entry = Depends(validate_entry)) -> EntryRead:
 
 @router.put(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=EntryRead,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def update_one(
     entry_data: EntryUpdate,
@@ -87,8 +109,11 @@ async def update_one(
 
 @router.patch(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=EntryRead,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def patch_one(
     entry_data: EntryUpdatePartial,
@@ -101,9 +126,12 @@ async def patch_one(
 
 @router.put(
     '/{uuid}/edit',
+    status_code=status.HTTP_200_OK,
     response_model=EntryRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def update_one_admin(
     entry_data: EntryAdminUpdate,
@@ -116,9 +144,12 @@ async def update_one_admin(
 
 @router.patch(
     '/{uuid}/edit',
+    status_code=status.HTTP_200_OK,
     response_model=EntryRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def patch_one_admin(
     entry_data: EntryAdminUpdatePartial,
@@ -132,7 +163,9 @@ async def patch_one_admin(
 @router.delete(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def delete_one(
     entry: Entry = Depends(validate_entry),

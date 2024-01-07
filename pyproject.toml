@@ -31,6 +31,8 @@ types-aiofiles = "^23.2.0.0"
 filetype = "^1.2.0"
 fastapi-mail = "^1.4.1"
 itsdangerous = "^2.1.2"
+pyyaml = "^6.0.1"
+types-pyyaml = "^6.0.12.12"
 
 
 [tool.poetry.group.dev.dependencies]

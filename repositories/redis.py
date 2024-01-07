@@ -67,7 +67,10 @@ class RateLimiter:
                 pipe.expire(key, window)
                 results = await pipe.execute()
             except aioredis.RedisError as e:
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Redis error: {e!r}") from e
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f'Redis error: {e!r}',
+                ) from e
         return results[1] > max_requests
 
 
@@ -87,7 +90,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if await self.rate_limiter.is_rate_limited(key, self.max_requests, self.window):
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                content=jsonable_encoder({'code': 429, 'message': 'Too many requests'}),
+                content=jsonable_encoder(
+                    {
+                        'code': status.HTTP_429_TOO_MANY_REQUESTS,
+                        'message': 'Too many requests',
+                    }
+                ),
             )
         response = await call_next(request)
         return response

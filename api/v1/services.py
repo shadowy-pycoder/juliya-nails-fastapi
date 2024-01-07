@@ -23,7 +23,9 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     response_model=ServiceRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def create_one(
     response: Response,
@@ -35,7 +37,7 @@ async def create_one(
     return ServiceRead.model_validate(service)
 
 
-@router.get('/', response_model=Page[ServiceRead])
+@router.get('/', status_code=status.HTTP_200_OK, response_model=Page[ServiceRead])
 @cache()
 async def get_all(
     service_filter: ServiceFilter = FilterDepends(ServiceFilter),
@@ -44,7 +46,7 @@ async def get_all(
     return await repo.find_all(service_filter)
 
 
-@router.get('/{uuid}', response_model=ServiceRead)
+@router.get('/{uuid}', status_code=status.HTTP_200_OK, response_model=ServiceRead)
 @cache()
 async def get_one(uuid: UUID4, repo: ServiceRepository = Depends()) -> ServiceRead:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')
@@ -53,9 +55,12 @@ async def get_one(uuid: UUID4, repo: ServiceRepository = Depends()) -> ServiceRe
 
 @router.get(
     '/{uuid}/entries',
+    status_code=status.HTTP_200_OK,
     response_model=Page[EntryRead],
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_service_entries(
@@ -69,9 +74,12 @@ async def get_service_entries(
 
 @router.put(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=ServiceRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def update_one(
     uuid: UUID4 | str,
@@ -85,9 +93,12 @@ async def update_one(
 
 @router.patch(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=ServiceRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def patch_one(
     uuid: UUID4 | str,
@@ -103,7 +114,9 @@ async def patch_one(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def delete_one(uuid: UUID4 | str, repo: ServiceRepository = Depends()) -> None:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')

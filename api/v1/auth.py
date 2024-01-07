@@ -43,7 +43,7 @@ async def register(
     '/resend-activation',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={400: {'description': 'Account already confirmed.'}},
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'Account already confirmed.'}},
 )
 async def resend_activation(
     background_tasks: BackgroundTasks,
@@ -58,7 +58,7 @@ async def resend_activation(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'message': 'New confirmation email has been sent.'},
+            {'code': status.HTTP_200_OK, 'message': 'New confirmation email has been sent.'},
         ),
     )
 
@@ -67,7 +67,7 @@ async def resend_activation(
     '/resend-confirmation',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={400: {'description': 'Account already confirmed.'}},
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'Account already confirmed.'}},
 )
 async def resend_email_change_confirmation(
     background_tasks: BackgroundTasks,
@@ -82,7 +82,7 @@ async def resend_email_change_confirmation(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'message': 'New confirmation email has been sent.'},
+            {'code': status.HTTP_200_OK, 'message': 'New confirmation email has been sent.'},
         ),
     )
 
@@ -91,7 +91,7 @@ async def resend_email_change_confirmation(
     '/activate',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'The confirmation token is invalid or has expired.'}},
 )
 async def activate_account(
     data: VerifyUserRequest,
@@ -108,7 +108,7 @@ async def activate_account(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'message': 'Account has been confirmed successfully.'},
+            {'code': status.HTTP_200_OK, 'message': 'Account has been confirmed successfully.'},
         ),
     )
 

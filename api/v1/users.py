@@ -34,9 +34,12 @@ router = APIRouter(
 
 @router.get(
     '/',
+    status_code=status.HTTP_200_OK,
     response_model=Page[UserRead],
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_all(
@@ -46,7 +49,7 @@ async def get_all(
     return await repo.find_all(user_filter)
 
 
-@router.get('/me', response_model=UserRead)
+@router.get('/me', status_code=status.HTTP_200_OK, response_model=UserRead)
 @cache()
 async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
     return user
@@ -54,9 +57,12 @@ async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
 
 @router.put(
     '/me',
+    status_code=status.HTTP_200_OK,
     response_model=UserRead,
     dependencies=[Depends(check_disposable)],
-    responses={400: {'description': 'Disposable domains are not allowed'}},
+    responses={
+        status.HTTP_400_BAD_REQUEST: {'description': 'Disposable domains are not allowed'},
+    },
 )
 async def update_me(
     user_data: UserUpdate,
@@ -76,9 +82,12 @@ async def update_me(
 
 @router.patch(
     '/me',
+    status_code=status.HTTP_200_OK,
     response_model=UserRead,
     dependencies=[Depends(check_disposable)],
-    responses={400: {'description': 'Disposable domains are not allowed'}},
+    responses={
+        status.HTTP_400_BAD_REQUEST: {'description': 'Disposable domains are not allowed'},
+    },
 )
 async def patch_me(
     user_data: UserUpdatePartial,
@@ -99,6 +108,7 @@ async def patch_me(
 
 @router.get(
     '/me/entries',
+    status_code=status.HTTP_200_OK,
     response_model=Page[EntryRead],
     dependencies=[Depends(get_confirmed_user)],
 )
@@ -110,7 +120,7 @@ async def get_my_entries(
     return await repo.find_many(user.entries)
 
 
-@router.get('/me/posts', response_model=Page[PostRead])
+@router.get('/me/posts', status_code=status.HTTP_200_OK, response_model=Page[PostRead])
 @cache()
 async def get_my_posts(
     user: User = Depends(get_current_user),
@@ -119,7 +129,7 @@ async def get_my_posts(
     return await repo.find_many(user.posts)
 
 
-@router.get('/me/socials', response_model=SocialRead)
+@router.get('/me/socials', status_code=status.HTTP_200_OK, response_model=SocialRead)
 @cache()
 async def get_my_socials(user: User = Depends(get_current_user)) -> SocialRead:
     return SocialRead.model_validate(user.socials)
@@ -127,6 +137,7 @@ async def get_my_socials(user: User = Depends(get_current_user)) -> SocialRead:
 
 @router.put(
     '/me/socials',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_confirmed_user)],
 )
@@ -141,6 +152,7 @@ async def update_my_socials(
 
 @router.patch(
     '/me/socials',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_confirmed_user)],
 )
@@ -155,6 +167,7 @@ async def patch_my_socials(
 
 @router.get(
     '/me/socials/avatar',
+    status_code=status.HTTP_200_OK,
     response_class=FileResponse,
 )
 async def get_my_avatar(
@@ -166,9 +179,13 @@ async def get_my_avatar(
 
 @router.put(
     '/me/socials/avatar',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_confirmed_user)],
-    responses={413: {'description': 'Too large'}, 415: {'description': 'Unsupported file type'}},
+    responses={
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {'description': 'Too large'},
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: {'description': 'Unsupported file type'},
+    },
 )
 async def update_my_avatar(
     file: UploadFile,
@@ -193,9 +210,12 @@ async def delete_my_avatar(
 
 @router.get(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=UserRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_one(uuid: UUID4 | str, repo: UserRepository = Depends()) -> UserRead:
@@ -205,9 +225,12 @@ async def get_one(uuid: UUID4 | str, repo: UserRepository = Depends()) -> UserRe
 
 @router.put(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=UserRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def update_one(
     uuid: UUID4 | str,
@@ -221,9 +244,12 @@ async def update_one(
 
 @router.patch(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=UserRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def patch_one(
     uuid: UUID4 | str,
@@ -239,7 +265,9 @@ async def patch_one(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def delete_one(
     uuid: UUID4 | str,
@@ -253,9 +281,12 @@ async def delete_one(
 
 @router.get(
     '/{uuid}/entries',
+    status_code=status.HTTP_200_OK,
     response_model=Page[EntryRead],
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_user_entries(
@@ -269,6 +300,7 @@ async def get_user_entries(
 
 @router.get(
     '/{uuid}/posts',
+    status_code=status.HTTP_200_OK,
     response_model=Page[PostRead],
     dependencies=[Depends(get_confirmed_user)],
 )
@@ -284,9 +316,12 @@ async def get_user_posts(
 
 @router.get(
     '/{uuid}/socials',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_user_socials(
@@ -299,9 +334,12 @@ async def get_user_socials(
 
 @router.put(
     '/{uuid}/socials',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def update_user_socials(
     uuid: UUID4 | str,
@@ -315,9 +353,12 @@ async def update_user_socials(
 
 @router.patch(
     '/{uuid}/socials',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def patch_user_socials(
     uuid: UUID4 | str,
@@ -331,6 +372,7 @@ async def patch_user_socials(
 
 @router.get(
     '/{uuid}/socials/avatar',
+    status_code=status.HTTP_200_OK,
     response_class=FileResponse,
     dependencies=[Depends(get_confirmed_user)],
 )
@@ -344,12 +386,13 @@ async def get_user_avatar(
 
 @router.put(
     '/{uuid}/socials/avatar',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
     dependencies=[Depends(get_admin_user)],
     responses={
-        413: {'description': 'Too large'},
-        415: {'description': 'Unsupported file type'},
-        403: {'description': 'You are not allowed to perform this operation'},
+        status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {'description': 'Too large'},
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE: {'description': 'Unsupported file type'},
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
     },
 )
 async def update_user_avatar(
@@ -366,7 +409,9 @@ async def update_user_avatar(
     '/{uuid}/socials/avatar',
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_admin_user)],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def delete_user_avatar(
     uuid: UUID4 | str,

@@ -13,7 +13,10 @@ from PIL import Image
 
 from config import config
 
-HTTP_403_FORBIDDEN = HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You are not allowed to perform this operation')
+HTTP_403_FORBIDDEN = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail='You are not allowed to perform this operation',
+)
 
 PATTERNS = {
     'username': r'^[A-Za-z][A-Za-z0-9_.]*$',
@@ -90,7 +93,10 @@ async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
     buffer = BytesIO(await file.read())
     size = buffer.getbuffer().nbytes
     if size > config.image_size:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail='Too large')
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail='Too large',
+        )
     if path != 'posts':
         output_size = (150, 150)
         img = Image.open(buffer)

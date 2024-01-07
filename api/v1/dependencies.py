@@ -36,7 +36,10 @@ async def get_active_user(user: UserRead = Depends(get_current_user)) -> UserRea
 
 async def get_confirmed_user(user: UserRead = Depends(get_current_user)) -> UserRead:
     if not user.confirmed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Please confirm your account to proceed')
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Please confirm your account to proceed',
+        )
     return user
 
 

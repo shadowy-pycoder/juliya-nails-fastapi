@@ -1,7 +1,13 @@
+import logging.config
 from pathlib import Path
+from typing import Any
 
 from fastapi_mail import FastMail, ConnectionConfig
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import yaml
+
+with open('config.yaml') as fstream:
+    config_yaml = yaml.safe_load(fstream)
 
 
 class Config(BaseSettings):
@@ -50,6 +56,7 @@ class Config(BaseSettings):
     template_folder: Path = Path(__file__).resolve().parent / 'templates'
     use_credentials: bool
     frontend_host: str = 'http://127.0.0.1:8001'
+    logging: dict[str, Any] = config_yaml['logging']
 
 
 config = Config()
@@ -69,3 +76,4 @@ conf = ConnectionConfig(
 )
 
 fm = FastMail(conf)
+logging.config.dictConfig(config.logging)

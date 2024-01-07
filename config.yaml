@@ -1,0 +1,44 @@
+
+logging:
+  version: 1
+  disable_existing_loggers': false
+  formatters:
+    default:
+      class: uvicorn.logging.DefaultFormatter
+      format: "%(levelprefix)-8s %(asctime)-23s \t%(name)s \t%(filename)s:%(lineno)s \t%(message)s"
+      use_colors: true
+    access:
+      class: uvicorn.logging.AccessFormatter
+      format: "%(levelprefix)-8s %(asctime)-23s \t%(name)s \t%(client_addr)s - \"%(request_line)s\" %(status_code)s"
+      use_colors: true
+  handlers:
+    default:
+      formatter: default
+      class: logging.StreamHandler
+      stream: ext://sys.stdout
+    access:
+      formatter: access
+      class: logging.StreamHandler
+      stream: ext://sys.stdout
+  loggers:
+    "":
+      handlers: ["default"]
+      level: INFO
+      propagate: false
+    "uvicorn":
+      handlers: ["default"]
+      level: INFO
+      propagate: false
+    "uvicorn.error":
+      handlers: ["default"]
+      level: INFO
+      propagate: false
+    "uvicorn.access":
+      handlers: ["access"]
+      level: INFO
+      propagate: false
+    "fastapi":
+      handlers: ["default"]
+      level: INFO
+      propagate: false
+    

@@ -22,8 +22,11 @@ router = APIRouter(
 
 @router.get(
     '/',
+    status_code=status.HTTP_200_OK,
     response_model=Page[SocialRead],
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_all(
@@ -34,8 +37,11 @@ async def get_all(
 
 @router.get(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 @cache()
 async def get_one(uuid: UUID4, repo: SocialRepository = Depends()) -> SocialRead:
@@ -45,8 +51,11 @@ async def get_one(uuid: UUID4, repo: SocialRepository = Depends()) -> SocialRead
 
 @router.put(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: SocialRepository = Depends()) -> SocialRead:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
@@ -56,8 +65,11 @@ async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: So
 
 @router.patch(
     '/{uuid}',
+    status_code=status.HTTP_200_OK,
     response_model=SocialRead,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, repo: SocialRepository = Depends()) -> SocialRead:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
@@ -68,7 +80,9 @@ async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, re
 @router.delete(
     '/{uuid}',
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={403: {'description': 'You are not allowed to perform this operation'}},
+    responses={
+        status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
+    },
 )
 async def delete_one(uuid: UUID4 | str, repo: SocialRepository = Depends()) -> None:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
