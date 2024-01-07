@@ -127,7 +127,10 @@ class AuthRepository:
         try:
             user = await self.user_repo.find_one(username=form_data.username)
         except HTTPException:
-            raise exception from None
+            try:
+                user = await self.user_repo.find_one(email=form_data.username)
+            except HTTPException:
+                raise exception from None
         if not self.verify_password(form_data.password, user.hashed_password):
             raise exception from None
         access_token = self.create_token(user)
