@@ -55,11 +55,12 @@ async def get_me(user: UserRead = Depends(get_current_user)) -> UserRead:
 @router.put(
     '/me',
     response_model=UserRead,
+    dependencies=[Depends(check_disposable)],
     responses={400: {'description': 'Disposable domains are not allowed'}},
 )
 async def update_me(
+    user_data: UserUpdate,
     background_tasks: BackgroundTasks,
-    user_data: UserUpdate = Depends(check_disposable),
     current_user: User = Depends(get_current_user),
     user_repo: UserRepository = Depends(),
     auth_repo: AuthRepository = Depends(),
@@ -76,11 +77,12 @@ async def update_me(
 @router.patch(
     '/me',
     response_model=UserRead,
+    dependencies=[Depends(check_disposable)],
     responses={400: {'description': 'Disposable domains are not allowed'}},
 )
 async def patch_me(
+    user_data: UserUpdatePartial,
     background_tasks: BackgroundTasks,
-    user_data: UserUpdatePartial = Depends(check_disposable),
     current_user: User = Depends(get_current_user),
     user_repo: UserRepository = Depends(),
     auth_repo: AuthRepository = Depends(),

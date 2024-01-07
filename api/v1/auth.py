@@ -22,14 +22,15 @@ router = APIRouter(
 @router.post(
     '/register',
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(check_disposable)],
     response_model=UserRead,
     responses={400: {'description': 'Disposable domains are not allowed'}},
 )
 async def register(
     response: Response,
     background_tasks: BackgroundTasks,
+    user_data: UserCreate,
     auth_repo: AuthRepository = Depends(),
-    user_data: UserCreate = Depends(check_disposable),
 ) -> UserRead:
     from api import users_router_v1
 
@@ -141,13 +142,14 @@ async def confirm_email_change(
 @router.post(
     '/forgot-password',
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(check_disposable)],
     response_class=JSONResponse,
     responses={400: {'description': 'Disposable domains are not allowed'}},
 )
 async def forgot_password(
+    user_data: EmailRequest,
     background_tasks: BackgroundTasks,
     auth_repo: AuthRepository = Depends(),
-    user_data: EmailRequest = Depends(check_disposable),
 ) -> JSONResponse:
     await auth_repo.email_forgot_password_link(
         user_data,
@@ -165,14 +167,15 @@ async def forgot_password(
 @router.put(
     "/reset-password",
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(check_disposable)],
     response_class=JSONResponse,
     responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
 )
 async def reset_password(
+    user_data: ResetRequest,
     auth_repo: AuthRepository = Depends(),
-    data: ResetRequest = Depends(check_disposable),
 ) -> JSONResponse:
-    await auth_repo.reset_user_password(data)
+    await auth_repo.reset_user_password(user_data)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(

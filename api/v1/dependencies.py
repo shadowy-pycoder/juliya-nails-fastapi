@@ -59,12 +59,11 @@ async def default_checker() -> DefaultChecker:
 
 
 async def check_disposable(
-    values: UserSchema | UserCreate | EmailRequest | ResetRequest,
+    user_data: UserSchema | UserCreate | EmailRequest | ResetRequest,
     checker: DefaultChecker = Depends(default_checker),
-) -> UserSchema | UserCreate | EmailRequest | ResetRequest:
-    if values.email is not None and await checker.is_disposable(values.email):
+) -> None:
+    if user_data.email is not None and await checker.is_disposable(user_data.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Disposable domains are not allowed',
         )
-    return values
