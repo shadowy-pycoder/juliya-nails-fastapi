@@ -25,13 +25,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
 
 
 class AuthRepository:
-    secret_key = config.secret_key
-    secret_salt = config.secret_salt
-    token_expiration = config.confirm_expiration
-    jwt_expiration = config.jwt_expiration
-    jwt_refresh_expiration = config.jwt_refresh_expiration
-    jwt_secret_key = config.jwt_secret_key
-    jwt_algorithm = config.jwt_algorithm
+    secret_key = config.SECRET_KEY
+    secret_salt = config.SECRET_SALT
+    token_expiration = config.CONFIRM_EXPIRATION
+    jwt_expiration = config.JWT_EXPIRATION
+    jwt_refresh_expiration = config.JWT_REFRESH_EXPIRATION
+    jwt_secret_key = config.JWT_SECRET_KEY
+    jwt_algorithm = config.JWT_ALGORITHM
 
     def __init__(
         self,

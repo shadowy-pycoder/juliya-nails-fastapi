@@ -41,4 +41,12 @@ logging:
       handlers: ["default"]
       level: INFO
       propagate: false
+    "sqlalchemy.engine.Engine":
+      handlers: ["default"]
+      level: INFO
+      propagate: false
+    "asyncio":
+      handlers: ["default"]
+      level: DEBUG
+      propagate: false
     

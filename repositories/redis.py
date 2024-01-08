@@ -14,10 +14,10 @@ from config import config
 
 def create_redis() -> aioredis.ConnectionPool:
     return aioredis.ConnectionPool(
-        host=config.redis_host,
-        port=config.redis_port,
-        # db=config.redis_db,
-        # password=config.redis_password,
+        host=config.REDIS_HOST,
+        port=config.REDIS_PORT,
+        # db=config.REDIS_DB,
+        # password=config.REDIS_PASSWORD,
         decode_responses=False,
     )
 
@@ -32,7 +32,8 @@ def get_redis() -> aioredis.Redis:
 class RedisRepository:
     def __init__(self, redis: aioredis.Redis = Depends(get_redis)) -> None:
         self.redis = redis
-        self.fernet = Fernet(config.secret_key)
+        self.fernet = Fernet(config.SECRET_KEY)
+        self.redis_hash = config.REDIS_HASH
 
     def encrypt_token(self, token: str) -> bytes:
         return self.fernet.encrypt(token.encode('utf-8'))
@@ -42,14 +43,14 @@ class RedisRepository:
 
     async def send_token(self, token: str, uuid: UUID4 | str) -> None:
         encrypted_token = self.encrypt_token(token)
-        await self.redis.hset(config.redis_hash, str(uuid), encrypted_token)
+        await self.redis.hset(self.redis_hash, str(uuid), encrypted_token)
 
     async def get_token(self, uuid: UUID4 | str) -> str | None:
-        token = await self.redis.hget(config.redis_hash, str(uuid))
+        token = await self.redis.hget(self.redis_hash, str(uuid))
         return self.decrypt_token(token) if token else None
 
     async def delete_token(self, uuid: UUID4 | str) -> None:
-        await self.redis.hdel(config.redis_hash, str(uuid))
+        await self.redis.hdel(self.redis_hash, str(uuid))
 
 
 class RateLimiter:
@@ -81,12 +82,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     ) -> None:
         super().__init__(app)
         self.rate_limiter = RateLimiter()
-        self.max_requests = config.max_requests
-        self.window = config.max_requests_window
+        self.max_requests = config.MAX_REQUESTS
+        self.window = config.MAX_REQUESTS_WINDOW
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         host = request.client.host if request.client else '127.0.0.1'
-        key = f"rate_limit:{host}:{request.url.path}"
+        key = f'rate_limit:{host}:{request.url.path}'
         if await self.rate_limiter.is_rate_limited(key, self.max_requests, self.window):
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,

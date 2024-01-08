@@ -24,11 +24,11 @@ from database import Base
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, 'DB_HOST', api_config.db_host)
-config.set_section_option(section, 'DB_NAME', api_config.db_name)
-config.set_section_option(section, 'DB_PASS', api_config.db_pass)
-config.set_section_option(section, 'DB_PORT', str(api_config.db_port))
-config.set_section_option(section, 'DB_USER', api_config.db_user)
+config.set_section_option(section, 'POSTGRES_HOST', api_config.POSTGRES_HOST)
+config.set_section_option(section, 'POSTGRES_DB', api_config.POSTGRES_DB)
+config.set_section_option(section, 'POSTGRES_PASSWORD', api_config.POSTGRES_PASSWORD)
+config.set_section_option(section, 'POSTGRES_PORT', str(api_config.POSTGRES_PORT))
+config.set_section_option(section, 'POSTGRES_USER', api_config.POSTGRES_USER)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -43,7 +43,7 @@ target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
+# my_important_option = config.get_main_option('my_important_option')
 # ... etc.
 
 
@@ -59,12 +59,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option('sqlalchemy.url')
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        dialect_opts={'paramstyle': 'named'},
     )
 
     with context.begin_transaction():
@@ -80,7 +80,7 @@ def run_migrations_online() -> None:
     """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+        prefix='sqlalchemy.',
         poolclass=pool.NullPool,
     )
 

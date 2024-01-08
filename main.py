@@ -1,3 +1,5 @@
+import logging.config
+
 from fastapi import FastAPI, Request, status
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -10,9 +12,9 @@ from config import config
 from repositories.redis import get_redis, RateLimitMiddleware
 
 app = FastAPI(
-    title=config.app_name,
-    description=config.description,
-    version=config.version,
+    title=config.APP_NAME,
+    description=config.DESCRIPTION,
+    version=config.VERSION,
 )
 app.include_router(
     router_v1,
@@ -44,5 +46,6 @@ async def startup() -> None:
     FastAPICache.init(
         RedisBackend(get_redis()),
         prefix='fastapi-cache',
-        expire=config.cache_expire,
+        expire=config.CACHE_EXPIRE,
     )
+    logging.config.dictConfig(config.LOGGING)

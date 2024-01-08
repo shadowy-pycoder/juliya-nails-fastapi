@@ -46,7 +46,7 @@ class SocialRepository(
 
     async def delete_avatar(self, socials: SocialMedia) -> None:
         delete_image(socials.avatar, path='profiles')
-        socials.avatar = config.default_avatar
+        socials.avatar = config.DEFAULT_AVATAR
         self.session.add(socials)
         await self.session.commit()
         await self.session.refresh(socials)

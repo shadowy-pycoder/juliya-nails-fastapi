@@ -63,7 +63,7 @@ def get_url(
 
 
 def get_image(filename: str, path: str = 'posts') -> Path:
-    img_path = config.root_dir / config.upload_dir / path / filename
+    img_path = config.ROOT_DIR / config.UPLOAD_DIR / path / filename
     if not Path.exists(img_path):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -80,19 +80,19 @@ async def _save_image_to_disk(path: Path, image: memoryview) -> None:
 async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
     f_ext = Path(file.filename).suffix if file.filename else '.jpg'
     filename = secrets.token_hex(8) + f_ext
-    img_path = config.root_dir / config.upload_dir / path
+    img_path = config.ROOT_DIR / config.UPLOAD_DIR / path
     img_path.mkdir(parents=True, exist_ok=True)
     img_path = img_path / filename
     detected_content_type = filetype.guess(file.file).extension.lower()
 
-    if file.content_type not in config.accepted_file_types or detected_content_type not in config.accepted_file_types:
+    if file.content_type not in config.ACCEPTED_FILE_TYPES or detected_content_type not in config.ACCEPTED_FILE_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail='Unsupported file type',
         )
     buffer = BytesIO(await file.read())
     size = buffer.getbuffer().nbytes
-    if size > config.image_size:
+    if size > config.IMAGE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail='Too large',
@@ -109,6 +109,6 @@ async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
 
 
 def delete_image(filename: str, *, path: str = 'posts') -> None:
-    if filename != config.default_avatar:
-        img_path = config.root_dir / config.upload_dir / path / filename
+    if filename != config.DEFAULT_AVATAR:
+        img_path = config.ROOT_DIR / config.UPLOAD_DIR / path / filename
         Path.unlink(img_path, missing_ok=True)

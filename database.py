@@ -4,14 +4,12 @@ import sqlalchemy.orm as so
 
 from config import config
 
-DATABASE_URL = config.database_url
-
 
 class Base(so.DeclarativeBase):
     pass
 
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(config.DATABASE_URL, echo=True)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False, autoflush=False)
 
 

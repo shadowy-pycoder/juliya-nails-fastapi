@@ -7,6 +7,8 @@ from config import config, fm
 from models.users import User
 from utils import AccountAction
 
+APP_NAME = config.APP_NAME
+
 
 class EmailRepository:
     async def send_email(
@@ -34,23 +36,23 @@ class EmailRepository:
         context: AccountAction,
     ) -> None:
         if context is AccountAction.ACTIVATE:
-            subject = f'Account Activation - {config.app_name}'
+            subject = f'Account Activation - {APP_NAME}'
             action = 'activate account'
             url_path = 'activate'
             template_name = 'confirm_email.html'
         elif context is AccountAction.CHANGE_EMAIL:
-            subject = f'Email Change - {config.app_name}'
+            subject = f'Email Change - {APP_NAME}'
             action = 'change email'
             url_path = 'change-email'
             template_name = 'confirm_email.html'
         elif context is AccountAction.RESET_PASSWORD:
-            subject = f'Password Reset - {config.app_name}'
+            subject = f'Password Reset - {APP_NAME}'
             action = 'reset password'
             url_path = 'reset-password'
             template_name = 'reset_password.html'
-        activate_url = f'{config.frontend_host}/auth/{url_path}/{str(token)}'
+        activate_url = f'{config.FRONTEND_HOST}/auth/{url_path}/{str(token)}'
         data = {
-            'app_name': config.app_name,
+            'app_name': APP_NAME,
             'username': user.username,
             'activate_url': activate_url,
             'action': action,
@@ -69,11 +71,11 @@ class EmailRepository:
         background_tasks: BackgroundTasks,
     ) -> None:
         data = {
-            'app_name': config.app_name,
+            'app_name': APP_NAME,
             'username': user.username,
-            'login_url': f'{config.frontend_host}',
+            'login_url': f'{config.FRONTEND_HOST}',
         }
-        subject = f'Welcome - {config.app_name}'
+        subject = f'Welcome - {APP_NAME}'
         await self.send_email(
             recipients=[user.email],
             subject=subject,

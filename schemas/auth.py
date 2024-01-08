@@ -1,7 +1,14 @@
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_validator, EmailStr, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    field_validator,
+    EmailStr,
+    Field,
+    model_validator,
+)
 
 from schemas.base import UUIDstr
 from utils import check_password_strength

@@ -115,4 +115,7 @@ class BaseRepository(
                 if not await self.unique(field_name, field_value):
                     errors.append(f'Please choose a different {field_name}')
         if errors:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail='\n'.join(e for e in errors))
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail='\n'.join(e for e in errors),
+            )

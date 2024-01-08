@@ -3,7 +3,14 @@ from datetime import datetime
 from functools import cached_property
 from typing import Annotated
 
-from pydantic import BaseModel, UUID4, Field, computed_field, ConfigDict, field_validator
+from pydantic import (
+    BaseModel,
+    UUID4,
+    Field,
+    computed_field,
+    ConfigDict,
+    field_validator,
+)
 
 from models.socials import SocialMedia
 from schemas.base import BaseFilter, UUIDstr
