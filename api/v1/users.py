@@ -21,8 +21,21 @@ from repositories.socials import SocialRepository
 from repositories.users import UserRepository
 from schemas.posts import PostRead
 from schemas.entries import EntryRead
-from schemas.socials import SocialRead, SocialAdminUpdate, SocialAdminUpdatePartial, SocialUpdate, SocialUpdatePartial
-from schemas.users import UserRead, UserUpdate, UserUpdatePartial, UserAdminUpdate, UserAdminUpdatePartial, UserFilter
+from schemas.socials import (
+    SocialRead,
+    SocialAdminUpdate,
+    SocialAdminUpdatePartial,
+    SocialUpdate,
+    SocialUpdatePartial,
+)
+from schemas.users import (
+    UserRead,
+    UserUpdate,
+    UserUpdatePartial,
+    UserAdminUpdate,
+    UserAdminUpdatePartial,
+    UserFilter,
+)
 
 
 router = APIRouter(
@@ -275,7 +288,9 @@ async def delete_one(
 ) -> None:
     user = await repo.find_by_uuid(uuid, detail='User does not exist')
     if user.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Attempt to delete admin user')
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail='Attempt to delete admin user'
+        )
     await repo.delete(user)
 
 

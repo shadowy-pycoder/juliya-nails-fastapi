@@ -91,7 +91,11 @@ async def resend_email_change_confirmation(
     '/activate',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={status.HTTP_400_BAD_REQUEST: {'description': 'The confirmation token is invalid or has expired.'}},
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            'description': 'The confirmation token is invalid or has expired.'
+        }
+    },
 )
 async def activate_account(
     data: VerifyUserRequest,

@@ -12,7 +12,9 @@ from schemas.services import (
 )
 from repositories.base import BaseRepository
 
-ServiceSchema: TypeAlias = ServiceUpdate | ServiceUpdatePartial | ServiceAdminUpdate | ServiceAdminUpdatePartial
+ServiceSchema: TypeAlias = (
+    ServiceUpdate | ServiceUpdatePartial | ServiceAdminUpdate | ServiceAdminUpdatePartial
+)
 
 
 class ServiceRepository(

@@ -49,7 +49,9 @@ class UserRepository(
         exclude_none: bool = False,
     ) -> User:
         await self.verify_uniqueness(values, ['username', 'email'], user)
-        return await super().update(user, values, exclude_unset=exclude_unset, exclude_none=exclude_none)
+        return await super().update(
+            user, values, exclude_unset=exclude_unset, exclude_none=exclude_none
+        )
 
     async def update_with_confirmation(
         self,
@@ -68,7 +70,11 @@ class UserRepository(
                 confirmed=False,
                 confirmed_on=None,
             )
-            user = await super().update(user, new_values, exclude_unset=exclude_unset, exclude_none=exclude_none)
+            user = await super().update(
+                user, new_values, exclude_unset=exclude_unset, exclude_none=exclude_none
+            )
             await auth_repo.change_email(user, background_tasks)
             return user
-        return await super().update(user, values, exclude_unset=exclude_unset, exclude_none=exclude_none)
+        return await super().update(
+            user, values, exclude_unset=exclude_unset, exclude_none=exclude_none
+        )

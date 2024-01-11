@@ -152,7 +152,9 @@ class AuthRepository:
 
     def generate_verification_token(self, instance: User, *, context: AccountAction) -> str | bytes:
         serializer = URLSafeTimedSerializer(self.secret_key)
-        salt = self.secret_salt + datetime.strftime(instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z').encode('utf-8')
+        salt = self.secret_salt + datetime.strftime(
+            instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z'
+        ).encode('utf-8')
         return serializer.dumps({context.value: str(instance.email)}, salt=salt)
 
     def valid_verification_token(
@@ -163,7 +165,9 @@ class AuthRepository:
         context: AccountAction,
     ) -> bool:
         serializer = URLSafeTimedSerializer(self.secret_key)
-        salt = self.secret_salt + datetime.strftime(instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z').encode('utf-8')
+        salt = self.secret_salt + datetime.strftime(
+            instance.updated, '%Y-%m-%dT%H:%M:%S.%f%z'
+        ).encode('utf-8')
         try:
             data: dict[str, Any] = serializer.loads(
                 token,
@@ -226,7 +230,9 @@ class AuthRepository:
                 detail='Please activate your account to proceed',
             )
         token = self.generate_verification_token(user, context=context)
-        await self.email_repo.send_confirmation_email(user, token, background_tasks, context=context)
+        await self.email_repo.send_confirmation_email(
+            user, token, background_tasks, context=context
+        )
 
     async def change_email(self, user: User, background_tasks: BackgroundTasks) -> None:
         token = self.generate_verification_token(user, context=AccountAction.CHANGE_EMAIL)

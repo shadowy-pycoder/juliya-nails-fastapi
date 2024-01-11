@@ -85,7 +85,10 @@ async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
     img_path = img_path / filename
     detected_content_type = filetype.guess(file.file).extension.lower()
 
-    if file.content_type not in config.ACCEPTED_FILE_TYPES or detected_content_type not in config.ACCEPTED_FILE_TYPES:
+    if (
+        file.content_type not in config.ACCEPTED_FILE_TYPES
+        or detected_content_type not in config.ACCEPTED_FILE_TYPES
+    ):
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail='Unsupported file type',

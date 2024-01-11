@@ -62,7 +62,9 @@ class BaseRepository(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
         return result
 
-    async def find_many(self, collection: WriteOnlyCollection[Any] | None = None, **filter_by: Any) -> Page[BaseSchemaType]:
+    async def find_many(
+        self, collection: WriteOnlyCollection[Any] | None = None, **filter_by: Any
+    ) -> Page[BaseSchemaType]:
         query = sa.select(self.model) if collection is None else collection.select()
         return await paginate(
             self.session,
@@ -80,7 +82,10 @@ class BaseRepository(
     async def update(
         self,
         instance: BaseModelType,
-        values: BaseSchemaUpdate | BaseSchemaUpdatePartial | BaseSchemaAdminUpdate | BaseSchemaAdminUpdatePartial,
+        values: BaseSchemaUpdate
+        | BaseSchemaUpdatePartial
+        | BaseSchemaAdminUpdate
+        | BaseSchemaAdminUpdatePartial,
         exclude_unset: bool = False,
         exclude_none: bool = False,
     ) -> BaseModelType:

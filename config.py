@@ -10,7 +10,9 @@ with open('config.yaml') as fstream:
 
 
 class Config(BaseSettings):
-    model_config = SettingsConfigDict(case_sensitive=True, env_file='.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(
+        case_sensitive=True, env_file='.env', env_file_encoding='utf-8'
+    )
     APP_NAME: str = 'JuliyaNails'
     DESCRIPTION: str = 'Beauty master service'
     VERSION: str = '1.0.0'
@@ -39,7 +41,7 @@ class Config(BaseSettings):
     UPLOAD_DIR: str = 'static/images/'
     DEFAULT_AVATAR: str = 'default.jpg'
     IMAGE_SIZE: int = 2097152
-    ACCEPTED_FILE_TYPES: list[str] = ["image/png", "image/jpeg", "image/jpg", "png", "jpeg", "jpg"]
+    ACCEPTED_FILE_TYPES: list[str] = ['image/png', 'image/jpeg', 'image/jpg', 'png', 'jpeg', 'jpg']
     CACHE_EXPIRE: int = 60
     MAX_REQUESTS: int = 5
     MAX_REQUESTS_WINDOW: int = 60

@@ -8,7 +8,13 @@ from api.v1.dependencies import get_current_user, get_admin_user, get_active_use
 from repositories.entries import EntryRepository
 from repositories.services import ServiceRepository
 from schemas.entries import EntryRead
-from schemas.services import ServiceRead, ServiceCreate, ServiceFilter, ServiceAdminUpdate, ServiceAdminUpdatePartial
+from schemas.services import (
+    ServiceRead,
+    ServiceCreate,
+    ServiceFilter,
+    ServiceAdminUpdate,
+    ServiceAdminUpdatePartial,
+)
 
 
 router = APIRouter(

@@ -1,14 +1,17 @@
 import logging.config
 
-from fastapi import FastAPI, Request, status
+from aioredis import Redis
+from fastapi import FastAPI, Request, status, Depends
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi.encoders import jsonable_encoder
 from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from api import router_v1
 from config import config
+from database import get_async_session, AsyncSession
 from repositories.redis import get_redis, RateLimitMiddleware
 
 app = FastAPI(
@@ -49,3 +52,26 @@ async def startup() -> None:
         expire=config.CACHE_EXPIRE,
     )
     logging.config.dictConfig(config.LOGGING)
+
+
+@app.get(
+    '/up',
+    status_code=status.HTTP_200_OK,
+    response_class=JSONResponse,
+    include_in_schema=False,
+)
+async def healthcheck(
+    redis: Redis = Depends(get_redis),
+    session: AsyncSession = Depends(get_async_session),
+) -> JSONResponse:
+    await redis.ping()
+    await session.execute(text('SELECT 1'))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder(
+            {
+                'code': status.HTTP_200_OK,
+                'message': 'Healthy',
+            },
+        ),
+    )

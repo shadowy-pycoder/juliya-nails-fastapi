@@ -78,7 +78,9 @@ class UserUpdate(UserCreate):
 
 class UserUpdatePartial(BaseUser):
     email: Annotated[EmailStr | None, Field(max_length=100)] = None
-    username: Annotated[str | None, Field(min_length=2, max_length=20, pattern=PATTERNS['username'])] = None
+    username: Annotated[
+        str | None, Field(min_length=2, max_length=20, pattern=PATTERNS['username'])
+    ] = None
     password: Annotated[str | None, Field(min_length=8)] = None
     confirm_password: Annotated[str | None, Field(exclude=True, min_length=8)] = None
 

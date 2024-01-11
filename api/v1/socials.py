@@ -57,7 +57,9 @@ async def get_one(uuid: UUID4, repo: SocialRepository = Depends()) -> SocialRead
         status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
     },
 )
-async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: SocialRepository = Depends()) -> SocialRead:
+async def update_one(
+    uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: SocialRepository = Depends()
+) -> SocialRead:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
     social = await repo.update(social, social_data)
     return SocialRead.model_validate(social)
@@ -71,7 +73,9 @@ async def update_one(uuid: UUID4 | str, social_data: SocialAdminUpdate, repo: So
         status.HTTP_403_FORBIDDEN: {'description': 'You are not allowed to perform this operation'},
     },
 )
-async def patch_one(uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, repo: SocialRepository = Depends()) -> SocialRead:
+async def patch_one(
+    uuid: UUID4 | str, social_data: SocialAdminUpdatePartial, repo: SocialRepository = Depends()
+) -> SocialRead:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
     social = await repo.update(social, social_data, exclude_unset=True)
     return SocialRead.model_validate(social)

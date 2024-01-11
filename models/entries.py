@@ -15,14 +15,18 @@ from models.users import User
 class Entry(BaseDBModel):
     __tablename__ = 'entry'
 
-    services: so.Mapped[list['Service']] = so.relationship(secondary=association_table, back_populates='entries', lazy='joined')
+    services: so.Mapped[list['Service']] = so.relationship(
+        secondary=association_table, back_populates='entries', lazy='joined'
+    )
     date: so.Mapped['date'] = so.mapped_column(sa.Date, nullable=False)
     time: so.Mapped['time'] = so.mapped_column(sa.Time(timezone=True), nullable=False)
     user_id: so.Mapped[UUID] = so.mapped_column(
         pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
     )
     user: so.Mapped['User'] = so.relationship(back_populates='entries')
-    completed: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')
+    completed: so.Mapped[bool] = so.mapped_column(
+        nullable=False, default=False, server_default='false'
+    )
 
     @property
     def timestamp(self) -> float:
