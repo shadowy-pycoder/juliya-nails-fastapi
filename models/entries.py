@@ -1,6 +1,4 @@
 from datetime import datetime, date, time, timedelta
-from decimal import Decimal
-from typing import Literal
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -19,7 +17,7 @@ class Entry(BaseDBModel):
         secondary=association_table, back_populates='entries', lazy='joined'
     )
     date: so.Mapped['date'] = so.mapped_column(sa.Date, nullable=False)
-    time: so.Mapped['time'] = so.mapped_column(sa.Time(timezone=True), nullable=False)
+    time: so.Mapped['time'] = so.mapped_column(sa.Time, nullable=False)
     user_id: so.Mapped[UUID] = so.mapped_column(
         pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
     )
@@ -33,9 +31,9 @@ class Entry(BaseDBModel):
         return datetime.combine(self.date, self.time).timestamp()
 
     @property
-    def duration(self) -> Decimal | Literal[0]:
+    def duration(self) -> int:
         return sum(service.duration for service in self.services)
 
     @property
     def ending_time(self) -> float:
-        return self.timestamp + timedelta(hours=float(self.duration)).total_seconds()
+        return self.timestamp + timedelta(minutes=self.duration).total_seconds()

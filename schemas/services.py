@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from functools import cached_property
 from typing import Annotated
 
@@ -28,7 +27,7 @@ class BaseServiceValidation(BaseModel):
 
 class BaseService(BaseServiceValidation):
     name: Annotated[str, Field(min_length=2, max_length=64)]
-    duration: Annotated[Decimal, Field(gte=0.1, decimal_places=2)]
+    duration: Annotated[int, Field(gte=10)]
 
 
 class ServiceRead(BaseService):
@@ -53,12 +52,12 @@ class ServiceCreate(BaseService):
 
 class ServiceUpdatePartial(BaseServiceValidation):
     name: Annotated[str | None, Field(min_length=2, max_length=64)] = None
-    duration: Annotated[Decimal, Field(gte=0.1, decimal_places=2)] | None = None
+    duration: Annotated[int, Field(gte=10)] | None = None
 
 
 class ServiceUpdate(BaseService):
     name: Annotated[str, Field(min_length=2, max_length=64)]
-    duration: Annotated[Decimal, Field(gte=0.1, decimal_places=2)]
+    duration: Annotated[int, Field(gte=10)]
 
 
 class ServiceAdminUpdatePartial(ServiceUpdatePartial):

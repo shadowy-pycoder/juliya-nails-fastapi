@@ -68,7 +68,7 @@ async def get_all(
 
 
 @router.get(
-    '/{date}',
+    '/date/{date}',
     status_code=status.HTTP_200_OK,
     response_model=Page[EntryInfo],
 )

@@ -1,4 +1,3 @@
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
@@ -14,7 +13,7 @@ class Service(BaseDBModel):
     __tablename__ = 'service'
 
     name: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True, nullable=False)
-    duration: so.Mapped[Decimal] = so.mapped_column(sa.Numeric(scale=1), nullable=False)
+    duration: so.Mapped[int] = so.mapped_column(sa.Integer, nullable=False)
     entries: so.WriteOnlyMapped['Entry'] = so.relationship(
         secondary=association_table, back_populates='services', passive_deletes=True
     )

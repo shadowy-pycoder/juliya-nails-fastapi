@@ -68,7 +68,7 @@ class EntryRepository(
         )
         new_instance.services.extend(services)
         if not await self.can_create_entry(new_instance):
-            url = get_url('entries', 'get_by_date', date=values.date.strftime("%Y-%m-%d"))
+            url = get_url('entries', 'get_by_date', date=values.date.strftime('%Y-%m-%d'))
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f'Please choose different date or time. See all entries for this date: {url}',
@@ -97,7 +97,7 @@ class EntryRepository(
             entry.services.clear()
             entry.services.extend(services)
         if not await self.can_create_entry(entry, context='update'):
-            url = get_url('entries', 'get_by_date', date=entry.date.strftime("%Y-%m-%d"))
+            url = get_url('entries', 'get_by_date', date=entry.date.strftime('%Y-%m-%d'))
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f'Please choose different date or time. See all entries for this date: {url}',

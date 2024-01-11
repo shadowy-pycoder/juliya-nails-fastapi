@@ -1,5 +1,4 @@
 from datetime import datetime, date as date_, time as time_
-from decimal import Decimal
 from functools import cached_property
 
 from pydantic import BaseModel, UUID4, computed_field, ConfigDict, model_validator
@@ -36,7 +35,7 @@ class EntryRead(BaseModel):
     user: UserInfoSchema
     services: list[ServiceRead]
     timestamp: float
-    duration: Decimal
+    duration: int
     ending_time: float
     completed: bool
 
