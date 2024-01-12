@@ -9,17 +9,11 @@ from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from config import config
+from core.config import config
 
 
 def create_redis() -> aioredis.ConnectionPool:
-    return aioredis.ConnectionPool(
-        host=config.REDIS_HOST,
-        port=config.REDIS_PORT,
-        # db=config.REDIS_DB,
-        # password=config.REDIS_PASSWORD,
-        decode_responses=False,
-    )
+    return aioredis.ConnectionPool.from_url(config.REDIS_DSN, decode_responses=False)
 
 
 pool = create_redis()

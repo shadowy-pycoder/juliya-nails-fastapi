@@ -18,7 +18,7 @@ from schemas.services import (
 
 
 router = APIRouter(
-    prefix='/api/v1/services',
+    prefix='/v1/services',
     tags=['services'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
 )

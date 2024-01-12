@@ -15,7 +15,7 @@ from models.services import Service
 from models.socials import SocialMedia
 from models.users import User
 
-from config import config as api_config
+from core.config import config as api_config
 from database import Base
 
 

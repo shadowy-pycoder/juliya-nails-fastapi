@@ -11,7 +11,7 @@ from fastapi import status, HTTPException, UploadFile, APIRouter
 import filetype  # type: ignore[import-untyped]
 from PIL import Image
 
-from config import config
+from core.config import config
 
 HTTP_403_FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -59,7 +59,7 @@ def get_url(
 ) -> str:
     module = import_module(f'api.v1.{module_name}')
     router: APIRouter = getattr(module, 'router')
-    return router.url_path_for(endpoint, **path_params)
+    return f'/api{router.url_path_for(endpoint, **path_params)}'
 
 
 def get_image(filename: str, path: str = 'posts') -> Path:

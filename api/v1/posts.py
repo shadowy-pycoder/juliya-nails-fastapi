@@ -14,7 +14,7 @@ from schemas.posts import PostRead, PostCreate, PostFilter, PostAdminUpdate, Pos
 
 
 router = APIRouter(
-    prefix='/api/v1/posts',
+    prefix='/v1/posts',
     tags=['posts'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
 )

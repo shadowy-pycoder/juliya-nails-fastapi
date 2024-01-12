@@ -10,7 +10,7 @@ from jose import jwt, JWTError
 from passlib.hash import bcrypt
 from pydantic import ValidationError
 
-from config import config
+from core.config import config
 from models.users import User
 from repositories.email import EmailRepository
 from repositories.socials import SocialRepository

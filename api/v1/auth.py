@@ -14,7 +14,7 @@ from utils import AccountAction
 
 
 router = APIRouter(
-    prefix='/api/v1/auth',
+    prefix='/v1/auth',
     tags=['auth'],
 )
 

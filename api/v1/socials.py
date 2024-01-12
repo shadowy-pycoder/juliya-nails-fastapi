@@ -10,7 +10,7 @@ from schemas.socials import SocialRead, SocialFilter, SocialAdminUpdate, SocialA
 
 
 router = APIRouter(
-    prefix='/api/v1/socials',
+    prefix='/v1/socials',
     tags=['socials'],
     dependencies=[
         Depends(get_current_user),

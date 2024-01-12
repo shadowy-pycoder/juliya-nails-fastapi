@@ -28,7 +28,7 @@ from schemas.entries import (
 
 
 router = APIRouter(
-    prefix='/api/v1/entries',
+    prefix='/v1/entries',
     tags=['entries'],
     dependencies=[
         Depends(get_current_user),

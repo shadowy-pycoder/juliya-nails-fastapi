@@ -2,7 +2,7 @@ from pathlib import Path
 
 from fastapi import UploadFile
 
-from config import config
+from core.config import config
 from models.socials import SocialMedia
 from schemas.socials import (
     SocialRead,

@@ -39,7 +39,7 @@ from schemas.users import (
 
 
 router = APIRouter(
-    prefix='/api/v1/users',
+    prefix='/v1/users',
     tags=['users'],
     dependencies=[Depends(get_current_user), Depends(get_active_user)],
 )
