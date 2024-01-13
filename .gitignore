@@ -3,3 +3,4 @@ __pycache__/
 *.env*
 static/images/posts/*
 static/images/profiles/*
+!mypy.ini
