@@ -1,6 +1,7 @@
 from typing import TypeAlias, TYPE_CHECKING
 
 from fastapi.background import BackgroundTasks
+from fastapi.logger import logger
 
 from src.models.users import User
 from src.repositories.base import BaseRepository
@@ -74,6 +75,7 @@ class UserRepository(
                 user, new_values, exclude_unset=exclude_unset, exclude_none=exclude_none
             )
             await auth_repo.change_email(user, background_tasks)
+            logger.info(f'[change email request]: {user}')
             return user
         return await super().update(
             user, values, exclude_unset=exclude_unset, exclude_none=exclude_none

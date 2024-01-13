@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, UploadFile
 from fastapi.background import BackgroundTasks
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
+from fastapi.logger import logger
 from fastapi_pagination.links import Page
 from fastapi.responses import FileResponse
 from pydantic import UUID4
@@ -90,6 +91,7 @@ async def update_me(
         auth_repo,
         background_tasks,
     )
+    logger.info(f'[update me]: {user}')
     return UserRead.model_validate(user)
 
 
@@ -116,6 +118,7 @@ async def patch_me(
         background_tasks,
         exclude_unset=True,
     )
+    logger.info(f'[patch me]: {user}')
     return UserRead.model_validate(user)
 
 
@@ -160,6 +163,7 @@ async def update_my_socials(
     repo: SocialRepository = Depends(),
 ) -> SocialRead:
     social = await repo.update(user.socials, social_data)
+    logger.info(f'[update my socials]: {social}')
     return SocialRead.model_validate(social)
 
 
@@ -175,6 +179,7 @@ async def patch_my_socials(
     repo: SocialRepository = Depends(),
 ) -> SocialRead:
     social = await repo.update(user.socials, social_data, exclude_unset=True)
+    logger.info(f'[patch my socials]: {social}')
     return SocialRead.model_validate(social)
 
 
@@ -252,6 +257,7 @@ async def update_one(
 ) -> UserRead:
     user = await repo.find_by_uuid(uuid, detail='User does not exist')
     user = await repo.update(user, user_data)
+    logger.info(f'[update user][admin]: {user}')
     return UserRead.model_validate(user)
 
 
@@ -271,6 +277,7 @@ async def patch_one(
 ) -> UserRead:
     user = await repo.find_by_uuid(uuid, detail='User does not exist')
     user = await repo.update(user, user_data, exclude_unset=True)
+    logger.info(f'[patch user][admin]: {user}')
     return UserRead.model_validate(user)
 
 
@@ -291,6 +298,7 @@ async def delete_one(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail='Attempt to delete admin user'
         )
+    logger.info(f'[delete user][admin]: {user}')
     await repo.delete(user)
 
 
@@ -363,6 +371,7 @@ async def update_user_socials(
 ) -> SocialRead:
     social = await repo.find_one(user_id=uuid, detail='Social page does not exist')
     social = await repo.update(social, social_data)
+    logger.info(f'[update user socials]: {social}')
     return SocialRead.model_validate(social)
 
 
@@ -382,6 +391,7 @@ async def patch_user_socials(
 ) -> SocialRead:
     social = await repo.find_one(user_id=uuid, detail='Social page does not exist')
     social = await repo.update(social, social_data, exclude_unset=True)
+    logger.info(f'[patch user socials]: {social}')
     return SocialRead.model_validate(social)
 
 

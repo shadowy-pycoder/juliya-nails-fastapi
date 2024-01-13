@@ -3,6 +3,7 @@ from datetime import date as date_
 from fastapi import APIRouter, Response, status, Depends
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
+from fastapi.logger import logger
 from fastapi_pagination.links import Page
 
 from src.api.v1.dependencies import (
@@ -47,6 +48,7 @@ async def create_one(
 ) -> EntryRead:
     entry = await repo.create(entry_data, user_id=user.uuid)
     response.headers['Location'] = router.url_path_for('get_one', uuid=entry.uuid)
+    logger.info(f'[new entry]: {entry}')
     return EntryRead.model_validate(entry)
 
 
@@ -104,6 +106,7 @@ async def update_one(
     repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data)
+    logger.info(f'[update entry]: {entry}')
     return EntryRead.model_validate(entry)
 
 
@@ -121,6 +124,7 @@ async def patch_one(
     repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data, exclude_unset=True)
+    logger.info(f'[patch entry]: {entry}')
     return EntryRead.model_validate(entry)
 
 
@@ -139,6 +143,7 @@ async def update_one_admin(
     repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data)
+    logger.info(f'[update entry][admin]: {entry}')
     return EntryRead.model_validate(entry)
 
 
@@ -157,6 +162,7 @@ async def patch_one_admin(
     repo: EntryRepository = Depends(),
 ) -> EntryRead:
     entry = await repo.update(entry, entry_data, exclude_unset=True)
+    logger.info(f'[patch entry][admin]: {entry}')
     return EntryRead.model_validate(entry)
 
 
@@ -171,4 +177,5 @@ async def delete_one(
     entry: Entry = Depends(validate_entry),
     repo: EntryRepository = Depends(),
 ) -> None:
+    logger.info(f'[delete entry]: {entry}')
     await repo.delete(entry)

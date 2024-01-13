@@ -37,3 +37,6 @@ class Entry(BaseDBModel):
     @property
     def ending_time(self) -> float:
         return self.timestamp + timedelta(minutes=self.duration).total_seconds()
+
+    def __repr__(self) -> str:
+        return f'Entry({self.uuid}, {self.date}, {self.time}, {self.user})'

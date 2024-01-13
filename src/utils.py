@@ -8,6 +8,7 @@ from typing import Any
 
 import aiofiles
 from fastapi import status, HTTPException, UploadFile, APIRouter
+from fastapi.logger import logger
 import filetype  # type: ignore[import-untyped]
 from PIL import Image
 
@@ -36,6 +37,11 @@ class AccountAction(str, Enum):
     RESET_PASSWORD = 'reset-password'
 
 
+class ImageType(str, Enum):
+    PROFILES = 'profiles'
+    POSTS = 'posts'
+
+
 def check_password_strength(password: str) -> None:
     message = 'Password should contain at least '
     error_log = []
@@ -62,8 +68,8 @@ def get_url(
     return f'/api{router.url_path_for(endpoint, **path_params)}'
 
 
-def get_image(filename: str, path: str = 'posts') -> Path:
-    img_path = config.ROOT_DIR / config.UPLOAD_DIR / path / filename
+def get_image(filename: str, *, path: ImageType) -> Path:
+    img_path = config.ROOT_DIR / config.UPLOAD_DIR / path.value / filename
     if not Path.exists(img_path):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -75,12 +81,13 @@ def get_image(filename: str, path: str = 'posts') -> Path:
 async def _save_image_to_disk(path: Path, image: memoryview) -> None:
     async with aiofiles.open(path, "wb") as f:
         await f.write(image)
+        logger.info(f'[save image]: {path}')
 
 
-async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
+async def save_image(file: UploadFile, *, path: ImageType) -> str:
     f_ext = Path(file.filename).suffix if file.filename else '.jpg'
     filename = secrets.token_hex(8) + f_ext
-    img_path = config.ROOT_DIR / config.UPLOAD_DIR / path
+    img_path = config.ROOT_DIR / config.UPLOAD_DIR / path.value
     img_path.mkdir(parents=True, exist_ok=True)
     img_path = img_path / filename
     detected_content_type = filetype.guess(file.file).extension.lower()
@@ -100,7 +107,7 @@ async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail='Too large',
         )
-    if path != 'posts':
+    if path is not ImageType.POSTS:
         output_size = (150, 150)
         img = Image.open(buffer)
         img.thumbnail(output_size)
@@ -111,7 +118,8 @@ async def save_image(file: UploadFile, *, path: str = 'posts') -> str:
     return filename
 
 
-def delete_image(filename: str, *, path: str = 'posts') -> None:
+def delete_image(filename: str, *, path: ImageType) -> None:
     if filename != config.DEFAULT_AVATAR:
-        img_path = config.ROOT_DIR / config.UPLOAD_DIR / path / filename
+        img_path = config.ROOT_DIR / config.UPLOAD_DIR / path.value / filename
         Path.unlink(img_path, missing_ok=True)
+        logger.info(f'[delete image]: {img_path}')

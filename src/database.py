@@ -9,7 +9,7 @@ class Base(so.DeclarativeBase):
     pass
 
 
-engine = create_async_engine(config.POSTGRES_DSN, echo=True)
+engine = create_async_engine(config.POSTGRES_DSN)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False, autoflush=False)
 
 

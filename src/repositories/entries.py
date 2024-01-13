@@ -86,7 +86,7 @@ class EntryRepository(
         exclude_none: bool = False,
     ) -> Entry:
         entry.update(
-            **values.model_dump(
+            values.model_dump(
                 exclude={'services'}, exclude_unset=exclude_unset, exclude_none=exclude_none
             )
         )

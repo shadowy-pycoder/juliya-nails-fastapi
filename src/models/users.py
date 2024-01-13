@@ -48,3 +48,6 @@ class User(BaseDBModel):
     @password.setter
     def password(self, candidate: str) -> None:
         self.hashed_password = bcrypt.hash(candidate)
+
+    def __repr__(self) -> str:
+        return f'User({self.uuid}, {self.username}, {self.email})'

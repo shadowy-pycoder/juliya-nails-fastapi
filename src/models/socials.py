@@ -27,3 +27,6 @@ class SocialMedia(BaseDBModel):
     website: so.Mapped[str] = so.mapped_column(sa.String(255), unique=True, nullable=True)
     vk: so.Mapped[str] = so.mapped_column(sa.String(255), unique=True, nullable=True)
     about: so.Mapped[str] = so.mapped_column(sa.String(255), nullable=True)
+
+    def __repr__(self) -> str:
+        return f'SocialMedia({self.uuid}, {self.user})'

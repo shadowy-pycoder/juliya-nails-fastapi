@@ -14,7 +14,7 @@ from src.schemas.posts import (
     PostFilter,
 )
 from src.repositories.base import BaseRepository
-from src.utils import get_image, save_image, delete_image
+from src.utils import get_image, save_image, delete_image, ImageType
 
 PostUpdateSchema: TypeAlias = (
     PostUpdate | PostUpdatePartial | PostAdminUpdate | PostAdminUpdatePartial
@@ -38,10 +38,10 @@ class PostRepository(
     filter_type = PostFilter
 
     def get_post_image(self, post: Post) -> Path:
-        return get_image(post.image)
+        return get_image(post.image, path=ImageType.POSTS)
 
     async def save_post_image(self, file: UploadFile) -> str:
-        return await save_image(file)
+        return await save_image(file, path=ImageType.POSTS)
 
     async def create(self, values: PostCreate) -> Post:
         await self.verify_uniqueness(values, ['title'])
@@ -62,10 +62,10 @@ class PostRepository(
             exclude_unset=exclude_unset,
             exclude_none=exclude_none,
         )
-        delete_image(old_post_image)
+        delete_image(old_post_image, path=ImageType.POSTS)
         return result
 
     async def delete(self, post: Post) -> None:
         old_post_image = post.image
         await super().delete(post)
-        delete_image(old_post_image)
+        delete_image(old_post_image, path=ImageType.POSTS)

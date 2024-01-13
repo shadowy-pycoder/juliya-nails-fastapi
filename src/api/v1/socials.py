@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Depends
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
+from fastapi.logger import logger
 from fastapi_pagination.links import Page
 from pydantic import UUID4
 
@@ -67,6 +68,7 @@ async def update_one(
 ) -> SocialRead:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
     social = await repo.update(social, social_data)
+    logger.info(f'[update social][admin]: {social}')
     return SocialRead.model_validate(social)
 
 
@@ -83,6 +85,7 @@ async def patch_one(
 ) -> SocialRead:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
     social = await repo.update(social, social_data, exclude_unset=True)
+    logger.info(f'[patch social][admin]: {social}')
     return SocialRead.model_validate(social)
 
 
@@ -95,4 +98,5 @@ async def patch_one(
 )
 async def delete_one(uuid: UUID4 | str, repo: SocialRepository = Depends()) -> None:
     social = await repo.find_by_uuid(uuid, detail='Social page does not exist')
+    logger.info(f'[delete social][admin]: {social}')
     await repo.delete(social)

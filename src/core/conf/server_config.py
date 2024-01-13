@@ -6,6 +6,8 @@ import yaml
 
 
 def get_logging_config(path: Path) -> dict[str, Any]:
+    if not Path.exists(path):
+        path = path.parent / 'default_logging.yaml'
     with open(path) as fstream:
         config_yaml = yaml.safe_load(fstream)
     return config_yaml['logging']
@@ -20,7 +22,7 @@ class ServerConfig(BaseSettings):
     REDOC_URL: str | None = '/redoc'
     SERVER_HOST: str = '127.0.0.1'
     SERVER_PORT: int = 8000
-    ROOT_DIR: Path = Path(__file__).resolve().parent.parent.parent
+    ROOT_DIR: Path = Path(__file__).resolve().parents[2]
     UPLOAD_DIR: str = 'static/images/'
     DEFAULT_AVATAR: str = 'default.jpg'
     IMAGE_SIZE: int = 2097152
@@ -30,5 +32,5 @@ class ServerConfig(BaseSettings):
     MAX_REQUESTS_WINDOW: int = 60
     TEMPLATE_FOLDER: str = 'templates'
     FRONTEND_HOST: str = 'http://127.0.0.1:8001'
-    LOGGING: dict[str, Any] = get_logging_config(ROOT_DIR / 'core/conf/logging_config.yaml')
-    ORIGINS: list[str] = ['http://127.0.0.1:8001']
+    LOGGING: dict[str, Any] = get_logging_config(ROOT_DIR / 'core/conf/logging.yaml')
+    ORIGINS: list[str] = [FRONTEND_HOST]

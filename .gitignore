@@ -1,6 +1,8 @@
 __pycache__/
 .vscode/
+.pytest_cache
 *.env*
-static/images/posts/*
-static/images/profiles/*
 !mypy.ini
+**/static/images/posts/*
+**/static/images/profiles/*
+logging.yaml

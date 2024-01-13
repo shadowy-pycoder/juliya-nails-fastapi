@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Response, status, Depends, Form, UploadFile, File
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
+from fastapi.logger import logger
 from fastapi_pagination.links import Page
 from fastapi.responses import FileResponse
 from pydantic import UUID4
@@ -49,6 +50,7 @@ async def create_one(
     post_schema = PostCreate(author_id=user.uuid, title=title, image=filename, content=content)
     post = await repo.create(post_schema)
     response.headers['Location'] = router.url_path_for('get_one', uuid=post.uuid)
+    logger.info(f'[new post]: {post}')
     return PostRead.model_validate(post)
 
 
@@ -99,6 +101,7 @@ async def update_one(
     filename = await repo.save_post_image(image)
     post_schema = PostAdminUpdate(title=title, image=filename, content=content)
     post = await repo.update(post, post_schema)
+    logger.info(f'[update post]: {post}')
     return PostRead.model_validate(post)
 
 
@@ -124,6 +127,7 @@ async def patch_one(
     filename = await repo.save_post_image(image) if image else None
     post_schema = PostAdminUpdatePartial(title=title, image=filename, content=content)
     post = await repo.update(post, post_schema, exclude_none=True)
+    logger.info(f'[patch post]: {post}')
     return PostRead.model_validate(post)
 
 
@@ -137,4 +141,5 @@ async def patch_one(
 )
 async def delete_one(uuid: UUID4 | str, repo: PostRepository = Depends()) -> None:
     post = await repo.find_by_uuid(uuid, detail='Post does not exist')
+    logger.info(f'[delete post]: {post}')
     await repo.delete(post)

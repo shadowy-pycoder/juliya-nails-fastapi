@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, status, Depends
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
+from fastapi.logger import logger
 from fastapi_pagination.links import Page
 from pydantic import UUID4
 
@@ -40,6 +41,7 @@ async def create_one(
 ) -> ServiceRead:
     service = await repo.create(service_data)
     response.headers['Location'] = router.url_path_for('get_one', uuid=service.uuid)
+    logger.info(f'[new service]: {service}')
     return ServiceRead.model_validate(service)
 
 
@@ -94,6 +96,7 @@ async def update_one(
 ) -> ServiceRead:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')
     service = await repo.update(service, service_data)
+    logger.info(f'[update service]: {service}')
     return ServiceRead.model_validate(service)
 
 
@@ -113,6 +116,7 @@ async def patch_one(
 ) -> ServiceRead:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')
     service = await repo.update(service, service_data, exclude_unset=True)
+    logger.info(f'[patch service]: {service}')
     return ServiceRead.model_validate(service)
 
 
@@ -126,4 +130,5 @@ async def patch_one(
 )
 async def delete_one(uuid: UUID4 | str, repo: ServiceRepository = Depends()) -> None:
     service = await repo.find_by_uuid(uuid, detail='Service does not exist')
+    logger.info(f'[delete service]: {service}')
     await repo.delete(service)

@@ -17,3 +17,6 @@ class Service(BaseDBModel):
     entries: so.WriteOnlyMapped['Entry'] = so.relationship(
         secondary=association_table, back_populates='services', passive_deletes=True
     )
+
+    def __repr__(self) -> str:
+        return f'Service({self.uuid}, {self.name}, {self.duration})'

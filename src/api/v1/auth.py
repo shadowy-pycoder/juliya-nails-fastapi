@@ -3,6 +3,7 @@ from fastapi.background import BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.logger import logger
 
 from src.api.v1.dependencies import get_current_user, check_disposable
 from src.models.users import User
@@ -36,6 +37,7 @@ async def register(
 
     user = await auth_repo.register_user(user_data, background_tasks)
     response.headers['Location'] = users_router_v1.url_path_for('get_one', uuid=user.uuid)
+    logger.info(f'[registration]: {user}')
     return UserRead.model_validate(user)
 
 
@@ -55,6 +57,7 @@ async def resend_activation(
         background_tasks,
         context=AccountAction.ACTIVATE,
     )
+    logger.info(f'[resend activation]: {user}')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
@@ -79,6 +82,7 @@ async def resend_email_change_confirmation(
         background_tasks,
         context=AccountAction.CHANGE_EMAIL,
     )
+    logger.info(f'[resend confirmation]: {user}')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
@@ -109,6 +113,7 @@ async def activate_account(
         background_tasks,
         context=AccountAction.ACTIVATE,
     )
+    logger.info(f'[account activation]: {user}')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
@@ -135,6 +140,7 @@ async def confirm_email_change(
         background_tasks,
         context=AccountAction.CHANGE_EMAIL,
     )
+    logger.info(f'[email change]: {user}')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
@@ -160,6 +166,7 @@ async def forgot_password(
         background_tasks,
         context=AccountAction.RESET_PASSWORD,
     )
+    logger.info(f'[forgot password]: {user_data.email}')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
@@ -180,6 +187,7 @@ async def reset_password(
     auth_repo: AuthRepository = Depends(),
 ) -> JSONResponse:
     await auth_repo.reset_user_password(user_data)
+    logger.info(f'[reset password]: {user_data.email}')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
@@ -195,7 +203,9 @@ async def token(
     redis_repo: RedisRepository = Depends(),
 ) -> Token:
     token, user = await auth_repo.get_token(form_data)
+    logger.info(f'[access token]: {user}')
     await redis_repo.send_token(token.refresh_token, user.uuid)
+    logger.info(f'[redis]: refresh token for uuid="{user.uuid}" sent')
     return token
 
 
@@ -210,7 +220,9 @@ async def refresh_access_token(
     redis_repo: RedisRepository = Depends(),
 ) -> Token:
     token, user = await auth_repo.get_refresh_token(token=refresh_token)
+    logger.info(f'[refresh access token]: {user}')
     redis_token = await redis_repo.get_token(user.uuid)
+    logger.info(f'[redis]: refresh token for uuid="{user.uuid}" retrieved')
     if not redis_token or token.refresh_token != redis_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -231,7 +243,9 @@ async def revoke_refresh_token(
     redis_repo: RedisRepository = Depends(),
 ) -> JSONResponse:
     user = auth_repo.validate_token(refresh_token, refresh_token=True)
+    logger.info(f'[revoke access token]: {user}')
     await redis_repo.delete_token(user.uuid)
+    logger.info(f'[redis]: refresh token for uuid="{user.uuid}" deleted')
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(

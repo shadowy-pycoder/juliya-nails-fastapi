@@ -14,7 +14,7 @@ from src.schemas.socials import (
     SocialFilter,
 )
 from src.repositories.base import BaseRepository
-from src.utils import get_image, save_image, delete_image
+from src.utils import get_image, save_image, delete_image, ImageType
 
 
 class SocialRepository(
@@ -34,18 +34,18 @@ class SocialRepository(
     filter_type = SocialFilter
 
     def get_avatar(self, socials: SocialMedia) -> Path:
-        return get_image(socials.avatar, path='profiles')
+        return get_image(socials.avatar, path=ImageType.PROFILES)
 
     async def update_avatar(self, socials: SocialMedia, file: UploadFile) -> None:
         old_avatar = socials.avatar
-        socials.avatar = await save_image(file, path='profiles')
+        socials.avatar = await save_image(file, path=ImageType.PROFILES)
         self.session.add(socials)
         await self.session.commit()
         await self.session.refresh(socials)
-        delete_image(old_avatar, path='profiles')
+        delete_image(old_avatar, path=ImageType.PROFILES)
 
     async def delete_avatar(self, socials: SocialMedia) -> None:
-        delete_image(socials.avatar, path='profiles')
+        delete_image(socials.avatar, path=ImageType.PROFILES)
         socials.avatar = config.DEFAULT_AVATAR
         self.session.add(socials)
         await self.session.commit()
