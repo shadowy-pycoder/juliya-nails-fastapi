@@ -69,13 +69,16 @@ class RateLimiter:
         return results[1] > max_requests
 
 
+rate_limiter = RateLimiter()
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: FastAPI,
     ) -> None:
         super().__init__(app)
-        self.rate_limiter = RateLimiter()
+        self.rate_limiter = rate_limiter
         self.max_requests = config.MAX_REQUESTS
         self.window = config.MAX_REQUESTS_WINDOW
 

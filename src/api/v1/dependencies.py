@@ -56,7 +56,7 @@ async def validate_entry(
 
 
 async def default_checker() -> DefaultChecker:
-    checker = DefaultChecker(db_provider="redis")
+    checker = DefaultChecker(db_provider='redis')
     await checker.init_redis()
     return checker
 

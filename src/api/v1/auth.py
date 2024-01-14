@@ -25,7 +25,7 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(check_disposable)],
     response_model=UserRead,
-    responses={400: {'description': 'Disposable domains are not allowed'}},
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'Disposable domains are not allowed'}},
 )
 async def register(
     response: Response,
@@ -126,7 +126,11 @@ async def activate_account(
     '/confirm-change',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            'description': 'The confirmation token is invalid or has expired.'
+        }
+    },
 )
 async def confirm_email_change(
     data: VerifyUserRequest,
@@ -144,7 +148,7 @@ async def confirm_email_change(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'message': 'Account has been updated successfully.'},
+            {'code': status.HTTP_200_OK, 'message': 'Account has been updated successfully.'},
         ),
     )
 
@@ -154,7 +158,7 @@ async def confirm_email_change(
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(check_disposable)],
     response_class=JSONResponse,
-    responses={400: {'description': 'Disposable domains are not allowed'}},
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'Disposable domains are not allowed'}},
 )
 async def forgot_password(
     user_data: EmailRequest,
@@ -170,7 +174,10 @@ async def forgot_password(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'message': 'A email with password reset link has been sent to you.'},
+            {
+                'code': status.HTTP_200_OK,
+                'message': 'A email with password reset link has been sent to you.',
+            },
         ),
     )
 
@@ -180,7 +187,11 @@ async def forgot_password(
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(check_disposable)],
     response_class=JSONResponse,
-    responses={400: {'description': 'The confirmation token is invalid or has expired.'}},
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            'description': 'The confirmation token is invalid or has expired.'
+        }
+    },
 )
 async def reset_password(
     user_data: ResetRequest,
@@ -191,12 +202,12 @@ async def reset_password(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'code': 200, 'message': 'Your password has been updated.'},
+            {'code': status.HTTP_200_OK, 'message': 'Your password has been updated.'},
         ),
     )
 
 
-@router.post('/token', response_model=Token)
+@router.post('/token', status_code=status.HTTP_200_OK, response_model=Token)
 async def token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     auth_repo: AuthRepository = Depends(),
@@ -211,8 +222,9 @@ async def token(
 
 @router.post(
     '/refresh',
+    status_code=status.HTTP_200_OK,
     response_model=Token,
-    responses={401: {'description': 'Unauthorized'}},
+    responses={status.HTTP_401_UNAUTHORIZED: {'description': 'Unauthorized'}},
 )
 async def refresh_access_token(
     refresh_token: str = Header(),
@@ -234,8 +246,9 @@ async def refresh_access_token(
 
 @router.post(
     '/revoke',
+    status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={401: {'description': 'Unauthorized'}},
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'Unauthorized'}},
 )
 async def revoke_refresh_token(
     refresh_token: str = Header(),
@@ -249,6 +262,6 @@ async def revoke_refresh_token(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder(
-            {'message': 'refresh token has been successfully revoked'},
+            {'code': status.HTTP_200_OK, 'message': 'refresh token has been successfully revoked'},
         ),
     )

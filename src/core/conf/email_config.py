@@ -12,3 +12,4 @@ class EmailConfig(BaseSettings):
     MAIL_FROM: str
     MAIL_FROM_NAME: str
     USE_CREDENTIALS: bool
+    SUPPRESS_SEND: int = 0

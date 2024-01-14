@@ -63,7 +63,6 @@ class UserRepository(
         exclude_unset: bool = False,
         exclude_none: bool = False,
     ) -> User:
-        new_values: UserAdminUpdatePartial | None = None
         await self.verify_uniqueness(values, ['username', 'email'], user)
         if values.email is not None and values.email != user.email:
             new_values = UserAdminUpdatePartial(

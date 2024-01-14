@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 class RedisConfig(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: int
-    REDIS_DB: str = '0'
+    REDIS_DB: int = 0
     REDIS_PASSWORD: str = ''
     REDIS_HASH: str
     REDIS_DSN: str | None = None
@@ -20,5 +20,5 @@ class RedisConfig(BaseSettings):
             password=info.data.get('REDIS_PASSWORD'),
             host=info.data['REDIS_HOST'],
             port=info.data.get('REDIS_PORT'),
-            path=info.data.get('REDIS_DB'),
+            path=str(info.data.get('REDIS_DB')),
         ).unicode_string()

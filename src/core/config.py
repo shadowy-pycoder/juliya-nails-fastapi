@@ -24,5 +24,6 @@ conf = ConnectionConfig(
     MAIL_FROM_NAME=config.MAIL_FROM_NAME,
     TEMPLATE_FOLDER=config.ROOT_DIR / config.TEMPLATE_FOLDER,
     USE_CREDENTIALS=config.USE_CREDENTIALS,
+    SUPPRESS_SEND=config.SUPPRESS_SEND,
 )
 fm = FastMail(conf)
