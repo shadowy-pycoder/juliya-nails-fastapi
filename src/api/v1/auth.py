@@ -183,7 +183,7 @@ async def forgot_password(
 
 
 @router.put(
-    "/reset-password",
+    '/reset-password',
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(check_disposable)],
     response_class=JSONResponse,

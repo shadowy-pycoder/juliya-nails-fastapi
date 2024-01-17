@@ -49,36 +49,29 @@ class AuthRepository:
 
     @classmethod
     def validate_token(cls, token: str, refresh_token: bool = False) -> UserPayload:
+        exc = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            headers={'WWW-Authenticate': 'Bearer'},
+        )
         if refresh_token:
-            exception = HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Invalid refresh token',
-                headers={'WWW-Authenticate': 'Bearer'},
-            )
+            exc.detail = 'Invalid refresh token'
         else:
-            exception = HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Could not validate credentials',
-                headers={'WWW-Authenticate': 'Bearer'},
-            )
+            exc.detail = 'Could not validate credentials'
         try:
             payload = jwt.decode(token, cls.jwt_secret_key, algorithms=[cls.jwt_algorithm])
         except JWTError:
-            raise exception from None
+            raise exc from None
         user_data = payload.get('user')
         access: bool = payload.get('access', False)
         if refresh_token and access:
-            raise exception from None
+            raise exc from None
         elif not refresh_token and not access:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail='Invalid access token',
-                headers={'WWW-Authenticate': 'Bearer'},
-            ) from None
+            exc.detail = 'Invalid access token'
+            raise exc from None
         try:
             user = UserPayload.model_validate(user_data)
         except ValidationError:
-            raise exception from None
+            raise exc from None
         return user
 
     @classmethod
@@ -214,21 +207,16 @@ class AuthRepository:
         background_tasks: BackgroundTasks,
         context: AccountAction,
     ) -> None:
+        exc = HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
         if user.active and context is AccountAction.ACTIVATE:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Account already activated.',
-            )
+            exc.detail = 'Account already activated.'
+            raise exc
         if user.confirmed and context is AccountAction.CHANGE_EMAIL:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Account already confirmed.',
-            )
+            exc.detail = 'Account already confirmed.'
+            raise exc
         if not user.active and context is AccountAction.CHANGE_EMAIL:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Please activate your account to proceed',
-            )
+            exc.detail = 'Please activate your account to proceed.'
+            raise exc
         token = self.generate_verification_token(user, context=context)
         await self.email_repo.send_confirmation_email(
             user, token, background_tasks, context=context
@@ -263,26 +251,25 @@ class AuthRepository:
         )
 
     async def reset_user_password(self, data: ResetRequest) -> None:
-        user = await self.user_repo.find_one(detail='User does not exist', email=data.email)
+        exc = HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = await self.user_repo.find_one(email=data.email)
+        except HTTPException:
+            exc.detail = 'The confirmation link is invalid or has expired.'
+            raise exc from None
         if not user.confirmed:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Your account is not verified. Please check your email inbox to verify your account.',
-            )
+            exc.detail = 'Your account is not verified. Please check your email inbox to verify your account.'
+            raise exc
         if not user.active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Your account is inactive. Please activate your account to proceed.',
-            )
+            exc.detail = 'Your account is inactive. Please activate your account to proceed.'
+            raise exc
         if not self.valid_verification_token(
             user,
             data.token,
             context=AccountAction.RESET_PASSWORD,
         ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='The confirmation link is invalid or has expired.',
-            )
+            exc.detail = 'The confirmation link is invalid or has expired.'
+            raise exc
 
         user_data = UserAdminUpdatePartial(**data.model_dump())
         await self.user_repo.update(user, user_data, exclude_unset=True)

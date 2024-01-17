@@ -1,6 +1,5 @@
 import asyncio
 from asyncio import AbstractEventLoop
-from datetime import datetime
 from pathlib import Path
 from typing import AsyncGenerator, Generator, Any
 
@@ -9,6 +8,7 @@ from fastapi_mail.email_utils import DefaultChecker
 from httpx import AsyncClient
 import pytest
 from pytest_mock import MockerFixture
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -16,61 +16,17 @@ from src.api.v1.dependencies import default_checker
 from src.core.config import config
 from src.database import get_async_session, Base
 from src.main import app
-from src.models.socials import SocialMedia
-from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
-
-
-VERSION = 'api/v1/'
-
-BASE_URL = f'http://testserver/{VERSION}'
-
-ADMIN_USER = {
-    'uuid': '5ad22093-194e-429c-b2af-cb531c7267c1',
-    'username': 'admin',
-    'email': 'admin@admin.com',
-    'password': 'admin',
-    'confirmed': True,
-    'confirmed_on': datetime.now(),
-    'active': True,
-    'admin': True,
-}
-VERIFIED_USER = {
-    'uuid': '950f8c5f-ad0c-4fb7-a693-dc42c7ea453a',
-    'username': 'alice',
-    'email': 'alice@alice.com',
-    'password': 'alice',
-    'confirmed': True,
-    'confirmed_on': datetime.now(),
-    'active': True,
-    'admin': False,
-}
-UNVERIFIED_USER = {
-    'uuid': '764a3113-7d87-4345-8c91-d68e2464b060',
-    'username': 'bob',
-    'email': 'bob@bob.com',
-    'password': 'bob',
-    'confirmed': False,
-    'confirmed_on': None,
-    'active': False,
-    'admin': False,
-}
-
-
-async def create_user(user_type: dict[str, Any], async_session: AsyncSession) -> User:
-    user = User(**user_type)
-    social = SocialMedia(user_id=user.uuid)
-    async_session.add(user)
-    async_session.add(social)
-    await async_session.commit()
-    return user
-
-
-async def create_token(user_type: dict[str, Any], async_client: AsyncClient) -> Token:
-    data = {'username': user_type['username'], 'password': user_type['password']}
-    resp = await async_client.post('auth/token', data=data)
-    return Token.model_validate(resp.json())
+from tests.utils import (
+    ADMIN_USER,
+    VERIFIED_USER,
+    UNVERIFIED_USER,
+    INACTIVE_USER,
+    BASE_URL,
+    contruct_query,
+    create_token,
+)
 
 
 engine_test = create_async_engine(config.POSTGRES_DSN, poolclass=NullPool)
@@ -113,6 +69,27 @@ async def prepare_database() -> AsyncGenerator[None, None]:
     assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(
+            sa.text(
+                """INSERT INTO "user" 
+                (uuid, email, hashed_password, username, confirmed, confirmed_on, active, admin)
+                VALUES (:uuid, :email, :hashed_password, :username, :confirmed, :confirmed_on, :active, :admin);"""
+            ),
+            [
+                {**contruct_query(user)}
+                for user in [ADMIN_USER, VERIFIED_USER, UNVERIFIED_USER, INACTIVE_USER]
+            ],
+        )
+        await conn.execute(
+            sa.text(
+                f"""INSERT INTO "social" (uuid, user_id, avatar)
+                VALUES (gen_random_uuid(), '{ADMIN_USER['uuid']}', 'default.jpg'),
+                        (gen_random_uuid(), '{VERIFIED_USER['uuid']}', 'default.jpg'),
+                        (gen_random_uuid(), '{UNVERIFIED_USER['uuid']}', 'default.jpg'),
+                        (gen_random_uuid(), '{INACTIVE_USER['uuid']}', 'default.jpg');"""
+            )
+        )
+        await conn.commit()
     yield
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -143,21 +120,6 @@ def event_loop() -> Generator[AbstractEventLoop, Any, None]:
 
 
 @pytest.fixture(scope='function')
-async def admin_user(async_session: AsyncSession) -> User:
-    return await create_user(ADMIN_USER, async_session)
-
-
-@pytest.fixture(scope='function')
-async def verified_user(async_session: AsyncSession) -> User:
-    return await create_user(VERIFIED_USER, async_session)
-
-
-@pytest.fixture(scope='function')
-async def unverified_user(async_session: AsyncSession) -> User:
-    return await create_user(UNVERIFIED_USER, async_session)
-
-
-@pytest.fixture(scope='function')
 async def admin_token(async_client: AsyncClient) -> Token:
     return await create_token(ADMIN_USER, async_client)
 
@@ -170,3 +132,13 @@ async def verified_user_token(async_client: AsyncClient) -> Token:
 @pytest.fixture(scope='function')
 async def unverified_user_token(async_client: AsyncClient) -> Token:
     return await create_token(UNVERIFIED_USER, async_client)
+
+
+@pytest.fixture(scope='function')
+async def inactive_user_token(async_client: AsyncClient) -> Token:
+    return await create_token(INACTIVE_USER, async_client)
+
+
+@pytest.fixture(scope='function')
+def anonymous_user_token() -> str:
+    return 'fake_token'
