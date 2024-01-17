@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging.config
 
 from aioredis import Redis
@@ -64,7 +65,9 @@ async def startup() -> None:
         prefix='fastapi-cache',
         expire=config.CACHE_EXPIRE,
     )
+
     logging.config.dictConfig(config.LOGGING)
+    app.state.start_time = datetime.now(tz=timezone.utc)
 
 
 @app.get(
@@ -95,6 +98,8 @@ async def healthcheck(
             {
                 'code': status.HTTP_200_OK,
                 'message': 'Healthy',
+                'start': app.state.start_time,
+                'uptime': datetime.now(tz=timezone.utc) - app.state.start_time,
             },
         ),
     )
