@@ -95,10 +95,6 @@ class TokenHandler:
         return cls.fernet.decrypt(token).decode('utf-8')
 
 
-def contruct_query(user: dict[str, Any]) -> dict[str, Any]:
-    return {k: v for k, v in user.items() if k != 'password'}
-
-
 async def create_user(user_type: dict[str, Any], async_session: AsyncSession) -> User:
     user = User(**user_type)
     social = SocialMedia(user_id=user.uuid)
@@ -108,7 +104,12 @@ async def create_user(user_type: dict[str, Any], async_session: AsyncSession) ->
     return user
 
 
-async def create_token(user_type: dict[str, Any], async_client: AsyncClient) -> Token:
+async def delete_user(user: User, async_session: AsyncSession) -> None:
+    await async_session.delete(user)
+    await async_session.commit()
+
+
+async def create_token(user: User, user_type: dict[str, Any], async_client: AsyncClient) -> Token:
     data = {'username': user_type['username'], 'password': user_type['password']}
     resp = await async_client.post('auth/token', data=data)
     return Token.model_validate(resp.json())

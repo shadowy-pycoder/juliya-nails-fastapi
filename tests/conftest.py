@@ -8,7 +8,6 @@ from fastapi_mail.email_utils import DefaultChecker
 from httpx import AsyncClient
 import pytest
 from pytest_mock import MockerFixture
-import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -16,6 +15,7 @@ from src.api.v1.dependencies import default_checker
 from src.core.config import config
 from src.database import get_async_session, Base
 from src.main import app
+from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
 from tests.utils import (
@@ -24,8 +24,9 @@ from tests.utils import (
     UNVERIFIED_USER,
     INACTIVE_USER,
     BASE_URL,
-    contruct_query,
     create_token,
+    create_user,
+    delete_user,
 )
 
 
@@ -69,27 +70,6 @@ async def prepare_database() -> AsyncGenerator[None, None]:
     assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(
-            sa.text(
-                """INSERT INTO "user" 
-                (uuid, email, hashed_password, username, confirmed, confirmed_on, active, admin)
-                VALUES (:uuid, :email, :hashed_password, :username, :confirmed, :confirmed_on, :active, :admin);"""
-            ),
-            [
-                {**contruct_query(user)}
-                for user in [ADMIN_USER, VERIFIED_USER, UNVERIFIED_USER, INACTIVE_USER]
-            ],
-        )
-        await conn.execute(
-            sa.text(
-                f"""INSERT INTO "social" (uuid, user_id, avatar)
-                VALUES (gen_random_uuid(), '{ADMIN_USER['uuid']}', 'default.jpg'),
-                        (gen_random_uuid(), '{VERIFIED_USER['uuid']}', 'default.jpg'),
-                        (gen_random_uuid(), '{UNVERIFIED_USER['uuid']}', 'default.jpg'),
-                        (gen_random_uuid(), '{INACTIVE_USER['uuid']}', 'default.jpg');"""
-            )
-        )
-        await conn.commit()
     yield
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -120,23 +100,51 @@ def event_loop() -> Generator[AbstractEventLoop, Any, None]:
 
 
 @pytest.fixture(scope='function')
-async def admin_token(async_client: AsyncClient) -> Token:
-    return await create_token(ADMIN_USER, async_client)
+async def admin_user(async_session: AsyncSession) -> AsyncGenerator[User, None]:
+    user = await create_user(ADMIN_USER, async_session)
+    yield user
+    await delete_user(user, async_session)
 
 
 @pytest.fixture(scope='function')
-async def verified_user_token(async_client: AsyncClient) -> Token:
-    return await create_token(VERIFIED_USER, async_client)
+async def verified_user(async_session: AsyncSession) -> AsyncGenerator[User, None]:
+    user = await create_user(VERIFIED_USER, async_session)
+    yield user
+    await delete_user(user, async_session)
 
 
 @pytest.fixture(scope='function')
-async def unverified_user_token(async_client: AsyncClient) -> Token:
-    return await create_token(UNVERIFIED_USER, async_client)
+async def unverified_user(async_session: AsyncSession) -> AsyncGenerator[User, None]:
+    user = await create_user(UNVERIFIED_USER, async_session)
+    yield user
+    await delete_user(user, async_session)
 
 
 @pytest.fixture(scope='function')
-async def inactive_user_token(async_client: AsyncClient) -> Token:
-    return await create_token(INACTIVE_USER, async_client)
+async def inactive_user(async_session: AsyncSession) -> AsyncGenerator[User, None]:
+    user = await create_user(INACTIVE_USER, async_session)
+    yield user
+    await delete_user(user, async_session)
+
+
+@pytest.fixture(scope='function')
+async def admin_user_token(admin_user: User, async_client: AsyncClient) -> Token:
+    return await create_token(admin_user, ADMIN_USER, async_client)
+
+
+@pytest.fixture(scope='function')
+async def verified_user_token(verified_user: User, async_client: AsyncClient) -> Token:
+    return await create_token(verified_user, VERIFIED_USER, async_client)
+
+
+@pytest.fixture(scope='function')
+async def unverified_user_token(unverified_user: User, async_client: AsyncClient) -> Token:
+    return await create_token(unverified_user, UNVERIFIED_USER, async_client)
+
+
+@pytest.fixture(scope='function')
+async def inactive_user_token(inactive_user: User, async_client: AsyncClient) -> Token:
+    return await create_token(inactive_user, INACTIVE_USER, async_client)
 
 
 @pytest.fixture(scope='function')

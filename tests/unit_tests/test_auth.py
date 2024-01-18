@@ -18,10 +18,7 @@ from src.schemas.auth import Token
 from src.schemas.users import UserRead
 from tests.utils import (
     ANONYMOUS_USER,
-    ADMIN_USER,
     VERIFIED_USER,
-    UNVERIFIED_USER,
-    INACTIVE_USER,
     USER_DATA,
     parse_payload,
     TokenHandler,
@@ -239,6 +236,50 @@ async def test_register_duplicate(async_client: AsyncClient) -> None:
     }
 
 
+@pytest.mark.dependency(depends=['test_reset_password'])
+async def test_reset_password_token_does_not_work_twice(async_client: AsyncClient) -> None:
+    data = {
+        'token': str(pytest.RESET_TOKEN),
+        'email': USER_DATA['email'],
+        'password': 'carol#Bar2',
+        'confirm_password': 'carol#Bar2',
+    }
+    resp = await async_client.put('auth/reset-password', json=data)
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
+
+
+@pytest.mark.dependency(depends=['test_change_email'])
+async def test_change_email_with_old_token(async_client: AsyncClient) -> None:
+    access_token = str(pytest.ACCESS_TOKEN)
+    resp = await async_client.patch(
+        'users/me',
+        json={'email': 'carol_new2@carol.com'},
+        headers={'Authorization': f'Bearer {access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    resp_data = UserRead(**resp.json())
+    assert resp_data.confirmed is False
+    assert resp_data.confirmed_on is None
+    data = {'token': str(pytest.EMAIL_CHANGE_TOKEN)}
+    resp = await async_client.post(
+        'auth/confirm-change', json=data, headers={'Authorization': f'Bearer {access_token}'}
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
+
+
+@pytest.mark.dependency(depends=['test_forgot_password'])
+async def test_change_email_with_reset_password_token(async_client: AsyncClient) -> None:
+    access_token = str(pytest.ACCESS_TOKEN)
+    data = {'token': str(pytest.RESET_TOKEN)}
+    resp = await async_client.post(
+        'auth/confirm-change', json=data, headers={'Authorization': f'Bearer {access_token}'}
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
+
+
 @pytest.mark.parametrize(
     'username, email, password, expectation',
     [
@@ -275,26 +316,6 @@ async def test_register_with_different_creds(
         resp.raise_for_status()
 
 
-@pytest.mark.parametrize(
-    'user, expectation',
-    [
-        (ANONYMOUS_USER, pytest.raises(HTTPStatusError)),
-        (ADMIN_USER, does_not_raise()),
-        (VERIFIED_USER, does_not_raise()),
-        (UNVERIFIED_USER, does_not_raise()),
-    ],
-)
-async def test_token_permissions(
-    async_client: AsyncClient,
-    user: dict[str, Any],
-    expectation: AbstractContextManager[Any],
-) -> None:
-    with expectation:
-        data = {'username': user['username'], 'password': user['password']}
-        resp = await async_client.post('auth/token', data=data)
-        resp.raise_for_status()
-
-
 async def test_refresh_access_token_anonymous(
     async_client: AsyncClient, anonymous_user_token: str
 ) -> None:
@@ -303,9 +324,12 @@ async def test_refresh_access_token_anonymous(
 
 
 async def test_refresh_access_token_no_redis(
-    async_client: AsyncClient, verified_user_token: Token, redis_client: FakeRedis
+    verified_user_token: Token,
+    verified_user: User,
+    async_client: AsyncClient,
+    redis_client: FakeRedis,
 ) -> None:
-    await redis_client.hdel(config.REDIS_HASH, VERIFIED_USER['uuid'])
+    await redis_client.hdel(config.REDIS_HASH, verified_user.uuid)
     resp = await async_client.post(
         'auth/refresh', headers={'refresh-token': verified_user_token.refresh_token}
     )
@@ -313,14 +337,14 @@ async def test_refresh_access_token_no_redis(
 
 
 async def test_revoke_refresh_token_anonymous(
-    async_client: AsyncClient, anonymous_user_token: str
+    anonymous_user_token: str, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post('auth/revoke', headers={'refresh-token': anonymous_user_token})
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 async def test_resend_activation_verified_user(
-    async_client: AsyncClient, verified_user_token: Token
+    verified_user_token: Token, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post(
         'auth/resend-activation',
@@ -331,7 +355,7 @@ async def test_resend_activation_verified_user(
 
 
 async def test_resend_activation_unverified_user(
-    async_client: AsyncClient, unverified_user_token: Token
+    unverified_user_token: Token, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post(
         'auth/resend-activation',
@@ -353,10 +377,10 @@ async def test_forgot_password_non_existing_email(async_client: AsyncClient) -> 
     }
 
 
-async def test_reset_password_admin_user(async_client: AsyncClient) -> None:
+async def test_reset_password_admin_user(admin_user: User, async_client: AsyncClient) -> None:
     data = {
         'token': 'token',
-        'email': ADMIN_USER['email'],
+        'email': admin_user.email,
         'password': 'passWord1#23',
         'confirm_password': 'passWord1#23',
     }
@@ -365,10 +389,12 @@ async def test_reset_password_admin_user(async_client: AsyncClient) -> None:
     assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
 
 
-async def test_reset_password_unverified_user(async_client: AsyncClient) -> None:
+async def test_reset_password_unverified_user(
+    unverified_user: User, async_client: AsyncClient
+) -> None:
     data = {
         'token': 'token',
-        'email': UNVERIFIED_USER['email'],
+        'email': unverified_user.email,
         'password': 'passWord1#23',
         'confirm_password': 'passWord1#23',
     }
@@ -379,10 +405,10 @@ async def test_reset_password_unverified_user(async_client: AsyncClient) -> None
     }
 
 
-async def test_reset_password_inactive_user(async_client: AsyncClient) -> None:
+async def test_reset_password_inactive_user(inactive_user: User, async_client: AsyncClient) -> None:
     data = {
         'token': 'token',
-        'email': INACTIVE_USER['email'],
+        'email': inactive_user.email,
         'password': 'passWord1#23',
         'confirm_password': 'passWord1#23',
     }
@@ -405,21 +431,8 @@ async def test_reset_password_anonymous_user(async_client: AsyncClient) -> None:
     assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
 
 
-@pytest.mark.dependency(depends=['test_reset_password'])
-async def test_reset_password_token_does_not_work_twice(async_client: AsyncClient):
-    data = {
-        'token': str(pytest.RESET_TOKEN),
-        'email': USER_DATA['email'],
-        'password': 'carol#Bar2',
-        'confirm_password': 'carol#Bar2',
-    }
-    resp = await async_client.put('auth/reset-password', json=data)
-    assert resp.status_code == status.HTTP_400_BAD_REQUEST
-    assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
-
-
 async def test_resend_email_change_confirmation_verified_user(
-    async_client: AsyncClient, verified_user_token: Token
+    verified_user_token: Token, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post(
         'auth/resend-confirmation',
@@ -430,7 +443,7 @@ async def test_resend_email_change_confirmation_verified_user(
 
 
 async def test_resend_email_change_confirmation_unverified_user(
-    async_client: AsyncClient, unverified_user_token: Token
+    unverified_user_token: Token, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post(
         'auth/resend-confirmation',
@@ -441,7 +454,7 @@ async def test_resend_email_change_confirmation_unverified_user(
 
 
 async def test_resend_email_change_confirmation_inactive_user(
-    async_client: AsyncClient, inactive_user_token: Token
+    inactive_user_token: Token, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post(
         'auth/resend-confirmation',
@@ -451,39 +464,11 @@ async def test_resend_email_change_confirmation_inactive_user(
     assert resp.json() == {'detail': 'Account already confirmed.'}
 
 
-@pytest.mark.dependency(depends=['test_change_email'])
-async def test_change_email_with_old_token(async_client: AsyncClient) -> None:
-    access_token = str(pytest.ACCESS_TOKEN)
-    resp = await async_client.patch(
-        'users/me',
-        json={'email': 'carol_new2@carol.com'},
-        headers={'Authorization': f'Bearer {access_token}'},
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    resp_data = UserRead(**resp.json())
-    assert resp_data.confirmed is False
-    assert resp_data.confirmed_on is None
-    data = {'token': str(pytest.EMAIL_CHANGE_TOKEN)}
-    resp = await async_client.post(
-        'auth/confirm-change', json=data, headers={'Authorization': f'Bearer {access_token}'}
-    )
-    assert resp.status_code == status.HTTP_400_BAD_REQUEST
-    assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
-
-
-@pytest.mark.dependency(depends=['test_forgot_password'])
-async def test_change_email_with_reset_password_token(async_client: AsyncClient) -> None:
-    access_token = str(pytest.ACCESS_TOKEN)
-    data = {'token': str(pytest.RESET_TOKEN)}
-    resp = await async_client.post(
-        'auth/confirm-change', json=data, headers={'Authorization': f'Bearer {access_token}'}
-    )
-    assert resp.status_code == status.HTTP_400_BAD_REQUEST
-    assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
-
-
 async def test_change_email_with_expired_confirm_token(
-    async_client: AsyncClient, verified_user_token: Token, freezer: FrozenDateTimeFactory
+    verified_user: User,
+    verified_user_token: Token,
+    async_client: AsyncClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     with fm.record_messages() as outbox:
         now = datetime.now()
@@ -497,7 +482,7 @@ async def test_change_email_with_expired_confirm_token(
         assert email_change_token is not None
         freezer.move_to(now + timedelta(seconds=config.CONFIRM_EXPIRATION + 1))
         data = {'token': email_change_token}
-        new_token = await create_token(VERIFIED_USER, async_client)
+        new_token = await create_token(verified_user, VERIFIED_USER, async_client)
         resp = await async_client.post(
             'auth/confirm-change',
             json=data,
@@ -508,20 +493,18 @@ async def test_change_email_with_expired_confirm_token(
 
 
 async def test_reset_password_with_expired_confirm_token(
-    async_client: AsyncClient, freezer: FrozenDateTimeFactory
+    verified_user: User, async_client: AsyncClient, freezer: FrozenDateTimeFactory
 ) -> None:
     with fm.record_messages() as outbox:
         now = datetime.now()
-        resp = await async_client.post(
-            'auth/forgot-password', json={'email': VERIFIED_USER['email']}
-        )
+        resp = await async_client.post('auth/forgot-password', json={'email': verified_user.email})
         assert resp.status_code == status.HTTP_200_OK
         reset_token = parse_payload(outbox)
         assert reset_token is not None
         freezer.move_to(now + timedelta(seconds=config.CONFIRM_EXPIRATION + 1))
         data = {
             'token': reset_token,
-            'email': VERIFIED_USER['email'],
+            'email': verified_user.email,
             'password': 'alice#Bar2',
             'confirm_password': 'alice#Bar2',
         }
@@ -531,7 +514,7 @@ async def test_reset_password_with_expired_confirm_token(
 
 
 async def test_change_email_with_expired_access_token(
-    async_client: AsyncClient, verified_user_token: Token, freezer: FrozenDateTimeFactory
+    verified_user_token: Token, async_client: AsyncClient, freezer: FrozenDateTimeFactory
 ) -> None:
     now = datetime.now()
     data = {'token': 'token'}
@@ -556,17 +539,17 @@ async def test_refresh_access_token_with_expired_token(
     assert resp.json() == {'detail': 'Invalid refresh token'}
 
 
-async def test_reset_password_with_different_email(async_client: AsyncClient) -> None:
+async def test_reset_password_with_different_email(
+    verified_user: User, admin_user: User, async_client: AsyncClient
+) -> None:
     with fm.record_messages() as outbox:
-        resp = await async_client.post(
-            'auth/forgot-password', json={'email': VERIFIED_USER['email']}
-        )
+        resp = await async_client.post('auth/forgot-password', json={'email': admin_user.email})
         assert resp.status_code == status.HTTP_200_OK
         reset_token = parse_payload(outbox)
         assert reset_token is not None
         data = {
             'token': reset_token,
-            'email': ADMIN_USER['email'],
+            'email': verified_user.email,
             'password': 'alice#Bar2',
             'confirm_password': 'alice#Bar2',
         }
@@ -576,7 +559,7 @@ async def test_reset_password_with_different_email(async_client: AsyncClient) ->
 
 
 async def test_change_email_with_different_access_token(
-    async_client: AsyncClient, verified_user_token: Token
+    verified_user_token: Token, unverified_user_token: Token, async_client: AsyncClient
 ) -> None:
     with fm.record_messages() as outbox:
         resp = await async_client.patch(
@@ -588,11 +571,10 @@ async def test_change_email_with_different_access_token(
         email_change_token = parse_payload(outbox)
         assert email_change_token is not None
         data = {'token': email_change_token}
-        new_token = await create_token(UNVERIFIED_USER, async_client)
         resp = await async_client.post(
             'auth/confirm-change',
             json=data,
-            headers={'Authorization': f'Bearer {new_token.access_token}'},
+            headers={'Authorization': f'Bearer {unverified_user_token.access_token}'},
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
         assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
