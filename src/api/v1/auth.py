@@ -1,18 +1,17 @@
-from fastapi import Depends, APIRouter, HTTPException, status, Header, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from fastapi.background import BackgroundTasks
 from fastapi.encoders import jsonable_encoder
+from fastapi.logger import logger
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.logger import logger
 
-from src.api.v1.dependencies import get_current_user, check_disposable
+from src.api.v1.dependencies import check_disposable, get_current_user
 from src.models.users import User
 from src.repositories.auth import AuthRepository
 from src.repositories.redis import RedisRepository
-from src.schemas.auth import Token, VerifyUserRequest, EmailRequest, ResetRequest
-from src.schemas.users import UserRead, UserCreate
+from src.schemas.auth import EmailRequest, ResetRequest, Token, VerifyUserRequest
+from src.schemas.users import UserCreate, UserRead
 from src.utils import AccountAction
-
 
 router = APIRouter(
     prefix='/v1/auth',

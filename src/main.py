@@ -1,21 +1,20 @@
-from datetime import datetime, timezone
 import logging.config
+from datetime import datetime, timezone
 
 from aioredis import Redis
-from fastapi import FastAPI, Request, status, Depends
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_pagination import add_pagination
 from sqlalchemy import text
 
 from src.api import router_v1
 from src.core.config import config
-from src.database import get_async_session, AsyncSession
-from src.repositories.redis import get_redis, RateLimitMiddleware
-
+from src.database import AsyncSession, get_async_session
+from src.repositories.redis import RateLimitMiddleware, get_redis
 
 app = FastAPI(
     title=config.APP_NAME,

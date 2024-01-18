@@ -1,16 +1,16 @@
 from typing import TypeAlias
 
 from src.models.services import Service
+from src.repositories.base import BaseRepository
 from src.schemas.services import (
-    ServiceRead,
-    ServiceCreate,
-    ServiceUpdate,
-    ServiceUpdatePartial,
     ServiceAdminUpdate,
     ServiceAdminUpdatePartial,
+    ServiceCreate,
     ServiceFilter,
+    ServiceRead,
+    ServiceUpdate,
+    ServiceUpdatePartial,
 )
-from src.repositories.base import BaseRepository
 
 ServiceSchema: TypeAlias = (
     ServiceUpdate | ServiceUpdatePartial | ServiceAdminUpdate | ServiceAdminUpdatePartial

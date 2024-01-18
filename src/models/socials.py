@@ -1,8 +1,8 @@
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID as pg_UUID
 import sqlalchemy.orm as so
+from sqlalchemy.dialects.postgresql import UUID as pg_UUID
 
 from src.models.base import BaseDBModel
 from src.models.users import User

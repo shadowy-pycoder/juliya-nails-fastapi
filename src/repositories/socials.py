@@ -4,17 +4,17 @@ from fastapi import UploadFile
 
 from src.core.config import config
 from src.models.socials import SocialMedia
+from src.repositories.base import BaseRepository
 from src.schemas.socials import (
-    SocialRead,
-    SocialCreate,
-    SocialUpdate,
-    SocialUpdatePartial,
     SocialAdminUpdate,
     SocialAdminUpdatePartial,
+    SocialCreate,
     SocialFilter,
+    SocialRead,
+    SocialUpdate,
+    SocialUpdatePartial,
 )
-from src.repositories.base import BaseRepository
-from src.utils import get_image, save_image, delete_image, ImageType
+from src.utils import ImageType, delete_image, get_image, save_image
 
 
 class SocialRepository(

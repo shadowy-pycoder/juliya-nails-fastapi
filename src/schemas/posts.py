@@ -1,11 +1,11 @@
 from __future__ import annotations
+
+import uuid  # noqa: F401
 from datetime import datetime
 from functools import cached_property
 from typing import Annotated
-import uuid  # noqa: F401
 
-from pydantic import BaseModel, UUID4, Field, computed_field, AfterValidator, ConfigDict
-
+from pydantic import UUID4, AfterValidator, BaseModel, ConfigDict, Field, computed_field
 
 from src.models.posts import Post
 from src.schemas.base import BaseFilter, UUIDstr

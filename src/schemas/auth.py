@@ -4,9 +4,9 @@ from uuid import UUID
 from pydantic import (
     BaseModel,
     ConfigDict,
-    field_validator,
     EmailStr,
     Field,
+    field_validator,
     model_validator,
 )
 

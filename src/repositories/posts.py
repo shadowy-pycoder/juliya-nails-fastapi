@@ -4,17 +4,17 @@ from typing import TypeAlias
 from fastapi import UploadFile
 
 from src.models.posts import Post
+from src.repositories.base import BaseRepository
 from src.schemas.posts import (
-    PostRead,
-    PostCreate,
-    PostUpdate,
-    PostUpdatePartial,
     PostAdminUpdate,
     PostAdminUpdatePartial,
+    PostCreate,
     PostFilter,
+    PostRead,
+    PostUpdate,
+    PostUpdatePartial,
 )
-from src.repositories.base import BaseRepository
-from src.utils import get_image, save_image, delete_image, ImageType
+from src.utils import ImageType, delete_image, get_image, save_image
 
 PostUpdateSchema: TypeAlias = (
     PostUpdate | PostUpdatePartial | PostAdminUpdate | PostAdminUpdatePartial

@@ -1,4 +1,4 @@
-from fastapi_mail import FastMail, ConnectionConfig
+from fastapi_mail import ConnectionConfig, FastMail
 from pydantic_settings import SettingsConfigDict
 
 from .conf import AuthConfig, DBConfig, EmailConfig, RedisConfig, ServerConfig

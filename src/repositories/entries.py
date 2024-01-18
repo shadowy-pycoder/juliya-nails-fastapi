@@ -1,23 +1,23 @@
-from typing import TypeAlias, Any
+from typing import Any, TypeAlias
 
-from fastapi import status, HTTPException
+import sqlalchemy as sa
+from fastapi import HTTPException, status
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination.links import Page
-import sqlalchemy as sa
 
 from src.models.entries import Entry
 from src.models.services import Service
+from src.repositories.base import BaseRepository
 from src.schemas.entries import (
-    EntryRead,
-    EntryCreate,
-    EntryUpdate,
-    EntryUpdatePartial,
     EntryAdminUpdate,
     EntryAdminUpdatePartial,
+    EntryCreate,
     EntryFilter,
     EntryInfo,
+    EntryRead,
+    EntryUpdate,
+    EntryUpdatePartial,
 )
-from src.repositories.base import BaseRepository
 from src.utils import get_url
 
 EntrySchema: TypeAlias = (

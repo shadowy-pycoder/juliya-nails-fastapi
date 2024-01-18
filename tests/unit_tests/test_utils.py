@@ -1,21 +1,22 @@
-from contextlib import nullcontext as does_not_raise, AbstractContextManager
-from pathlib import Path
 import tempfile
+from contextlib import AbstractContextManager
+from contextlib import nullcontext as does_not_raise
+from pathlib import Path
 from typing import Any
 
-from fastapi import HTTPException, UploadFile
 import pytest
+from fastapi import HTTPException, UploadFile
 from starlette.datastructures import Headers
 
 from src.core.config import config
 from src.utils import (
-    check_password_strength,
     MESSAGE_PREFIX,
-    get_url,
     ImageType,
-    get_image,
-    save_image,
+    check_password_strength,
     delete_image,
+    get_image,
+    get_url,
+    save_image,
 )
 from tests.utils import VERSION, create_test_image
 

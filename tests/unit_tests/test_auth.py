@@ -1,13 +1,14 @@
-from contextlib import nullcontext as does_not_raise, AbstractContextManager
+from contextlib import AbstractContextManager
+from contextlib import nullcontext as does_not_raise
 from datetime import datetime, timedelta
 from typing import Any
 
+import pytest
+import sqlalchemy as sa
 from fakeredis.aioredis import FakeRedis
 from fastapi import status
 from freezegun.api import FrozenDateTimeFactory
 from httpx import AsyncClient, HTTPStatusError
-import pytest
-import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import config, fm
@@ -18,11 +19,11 @@ from src.schemas.auth import Token
 from src.schemas.users import UserRead
 from tests.utils import (
     ANONYMOUS_USER,
-    VERIFIED_USER,
     USER_DATA,
-    parse_payload,
+    VERIFIED_USER,
     TokenHandler,
     create_token,
+    parse_payload,
 )
 
 

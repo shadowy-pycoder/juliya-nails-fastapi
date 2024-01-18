@@ -1,11 +1,11 @@
-from typing import Any, Type, TypeVar, Generic
+from typing import Any, Generic, Type, TypeVar
 
-from fastapi import Depends, status, HTTPException
+import sqlalchemy as sa
+from fastapi import Depends, HTTPException, status
 from fastapi_filter.contrib.sqlalchemy import Filter
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination.links import Page
 from pydantic import UUID4, BaseModel
-import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import QueryableAttribute, WriteOnlyCollection
 

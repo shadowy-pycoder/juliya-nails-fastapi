@@ -1,4 +1,4 @@
-from typing import TypeAlias, TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from fastapi.background import BackgroundTasks
 from fastapi.logger import logger
@@ -6,13 +6,13 @@ from fastapi.logger import logger
 from src.models.users import User
 from src.repositories.base import BaseRepository
 from src.schemas.users import (
-    UserRead,
-    UserCreate,
-    UserUpdate,
-    UserUpdatePartial,
     UserAdminUpdate,
     UserAdminUpdatePartial,
+    UserCreate,
     UserFilter,
+    UserRead,
+    UserUpdate,
+    UserUpdatePartial,
 )
 
 if TYPE_CHECKING:

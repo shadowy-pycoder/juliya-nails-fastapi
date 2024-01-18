@@ -1,6 +1,6 @@
+import uuid  # noqa: F401
 from datetime import datetime
 from typing import Annotated, TypeAlias
-import uuid  # noqa: F401
 
 from fastapi_filter.contrib.sqlalchemy import Filter
 from pydantic import UUID4, AfterValidator

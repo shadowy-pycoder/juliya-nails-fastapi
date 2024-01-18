@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-
-from fastapi import HTTPException, status, Depends
+from fastapi import Depends, HTTPException, status
 from fastapi.background import BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from itsdangerous import URLSafeTimedSerializer, BadSignature
-from jose import jwt, JWTError
+from itsdangerous import BadSignature, URLSafeTimedSerializer
+from jose import JWTError, jwt
 from passlib.hash import bcrypt
 from pydantic import ValidationError
 
@@ -15,11 +14,10 @@ from src.models.users import User
 from src.repositories.email import EmailRepository
 from src.repositories.socials import SocialRepository
 from src.repositories.users import UserRepository
-from src.schemas.auth import UserPayload, Token, VerifyUserRequest, EmailRequest, ResetRequest
+from src.schemas.auth import EmailRequest, ResetRequest, Token, UserPayload, VerifyUserRequest
 from src.schemas.socials import SocialCreate
-from src.schemas.users import UserCreate, UserAdminUpdatePartial
+from src.schemas.users import UserAdminUpdatePartial, UserCreate
 from src.utils import AccountAction
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/v1/auth/token')
 

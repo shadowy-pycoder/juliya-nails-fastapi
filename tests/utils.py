@@ -1,5 +1,5 @@
-from datetime import datetime
 import io
+from datetime import datetime
 from typing import Any
 
 from cryptography.fernet import Fernet
@@ -8,12 +8,10 @@ from passlib.hash import bcrypt
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from src.core.config import config
 from src.models.socials import SocialMedia
 from src.models.users import User
 from src.schemas.auth import Token
-
 
 VERSION = 'api/v1/'
 

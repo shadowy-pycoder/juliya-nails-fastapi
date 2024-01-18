@@ -3,11 +3,11 @@ from functools import cached_property
 from typing import Annotated
 
 from pydantic import (
-    BaseModel,
     UUID4,
+    BaseModel,
+    ConfigDict,
     Field,
     computed_field,
-    ConfigDict,
     field_validator,
 )
 

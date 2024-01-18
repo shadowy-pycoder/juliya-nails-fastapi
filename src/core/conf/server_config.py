@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Any
 
-from pydantic_settings import BaseSettings
 import yaml
+from pydantic_settings import BaseSettings
 
 
 def get_logging_config(path: Path) -> dict[str, Any]:

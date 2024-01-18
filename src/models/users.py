@@ -1,16 +1,16 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from passlib.hash import bcrypt
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from passlib.hash import bcrypt
 
 from src.models.base import BaseDBModel
 
 if TYPE_CHECKING:
     from src.models.entries import Entry
-    from src.models.socials import SocialMedia
     from src.models.posts import Post
+    from src.models.socials import SocialMedia
 
 
 class User(BaseDBModel):

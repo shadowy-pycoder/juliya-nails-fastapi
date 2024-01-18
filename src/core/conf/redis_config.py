@@ -1,4 +1,4 @@
-from pydantic import field_validator, RedisDsn, ValidationInfo
+from pydantic import RedisDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
 

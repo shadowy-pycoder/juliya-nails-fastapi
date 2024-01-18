@@ -1,19 +1,18 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Depends, status
+from fastapi.logger import logger
 from fastapi_cache.decorator import cache
 from fastapi_filter import FilterDepends
-from fastapi.logger import logger
 from fastapi_pagination.links import Page
 from pydantic import UUID4
 
-from src.api.v1.dependencies import get_current_user, get_admin_user, get_active_user
+from src.api.v1.dependencies import get_active_user, get_admin_user, get_current_user
 from src.repositories.socials import SocialRepository
 from src.schemas.socials import (
-    SocialRead,
-    SocialFilter,
     SocialAdminUpdate,
     SocialAdminUpdatePartial,
+    SocialFilter,
+    SocialRead,
 )
-
 
 router = APIRouter(
     prefix='/v1/socials',

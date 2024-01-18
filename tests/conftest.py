@@ -1,35 +1,34 @@
 import asyncio
 from asyncio import AbstractEventLoop
 from pathlib import Path
-from typing import AsyncGenerator, Generator, Any
+from typing import Any, AsyncGenerator, Generator
 
 import fakeredis
+import pytest
 from fastapi_mail.email_utils import DefaultChecker
 from httpx import AsyncClient
 from PIL import ImageFile
-import pytest
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.api.v1.dependencies import default_checker
 from src.core.config import config
-from src.database import get_async_session, Base
+from src.database import Base, get_async_session
 from src.main import app
 from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
 from tests.utils import (
     ADMIN_USER,
-    VERIFIED_USER,
-    UNVERIFIED_USER,
-    INACTIVE_USER,
     BASE_URL,
+    INACTIVE_USER,
+    UNVERIFIED_USER,
+    VERIFIED_USER,
     create_token,
     create_user,
     delete_user,
 )
-
 
 engine_test = create_async_engine(config.POSTGRES_DSN, poolclass=NullPool)
 async_session_maker = async_sessionmaker(engine_test, expire_on_commit=False, autoflush=False)

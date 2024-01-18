@@ -1,13 +1,13 @@
-from fastapi import status, Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from fastapi_mail.email_utils import DefaultChecker
 from pydantic import UUID4
 
 from src.models.entries import Entry
 from src.models.users import User
-from src.repositories.auth import oauth2_scheme, AuthRepository, EmailRequest, ResetRequest
+from src.repositories.auth import AuthRepository, EmailRequest, ResetRequest, oauth2_scheme
 from src.repositories.entries import EntryRepository
 from src.repositories.users import UserRepository, UserSchema
-from src.schemas.users import UserRead, UserCreate
+from src.schemas.users import UserCreate, UserRead
 from src.utils import HTTP_403_FORBIDDEN
 
 

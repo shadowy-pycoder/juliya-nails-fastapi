@@ -1,9 +1,9 @@
-from datetime import datetime, date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID as pg_UUID
 import sqlalchemy.orm as so
+from sqlalchemy.dialects.postgresql import UUID as pg_UUID
 
 from src.models.base import BaseDBModel, association_table
 from src.models.services import Service

@@ -3,7 +3,7 @@ from typing import Awaitable, Callable
 
 import aioredis
 from cryptography.fernet import Fernet
-from fastapi import Depends, FastAPI, Request, Response, status, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import UUID4

@@ -1,23 +1,24 @@
 from __future__ import annotations
+
 from datetime import datetime
 from functools import cached_property
 from typing import Annotated
 
 from pydantic import (
+    UUID4,
+    AfterValidator,
     BaseModel,
     ConfigDict,
     EmailStr,
-    UUID4,
-    AfterValidator,
     Field,
+    computed_field,
     field_validator,
     model_validator,
-    computed_field,
 )
 
 from src.models.users import User
 from src.schemas.base import BaseFilter, UUIDstr
-from src.utils import PATTERNS, get_url, check_password_strength
+from src.utils import PATTERNS, check_password_strength, get_url
 
 
 class BaseUser(BaseModel):

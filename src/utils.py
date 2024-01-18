@@ -1,15 +1,15 @@
+import re
+import secrets
 from enum import Enum
 from importlib import import_module
 from io import BytesIO
 from pathlib import Path
-import re
-import secrets
 from typing import Any
 
 import aiofiles
-from fastapi import status, HTTPException, UploadFile, APIRouter
-from fastapi.logger import logger
 import filetype  # type: ignore[import-untyped]
+from fastapi import APIRouter, HTTPException, UploadFile, status
+from fastapi.logger import logger
 from PIL import Image
 
 from src.core.config import config

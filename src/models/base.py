@@ -3,8 +3,8 @@ from typing import Any
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID as pg_UUID
 import sqlalchemy.orm as so
+from sqlalchemy.dialects.postgresql import UUID as pg_UUID
 from sqlalchemy.sql import func
 
 from src.database import Base
