@@ -6,6 +6,7 @@ from typing import AsyncGenerator, Generator, Any
 import fakeredis
 from fastapi_mail.email_utils import DefaultChecker
 from httpx import AsyncClient
+from PIL import ImageFile
 import pytest
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -150,3 +151,10 @@ async def inactive_user_token(inactive_user: User, async_client: AsyncClient) ->
 @pytest.fixture(scope='function')
 def anonymous_user_token() -> str:
     return 'fake_token'
+
+
+@pytest.fixture(autouse=True, scope='session')
+def load_truncate() -> Generator[None, None, None]:
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
+    yield
+    ImageFile.LOAD_TRUNCATED_IMAGES = False

@@ -1,9 +1,11 @@
 from datetime import datetime
+import io
 from typing import Any
 
 from cryptography.fernet import Fernet
 from httpx import AsyncClient
 from passlib.hash import bcrypt
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -113,3 +115,12 @@ async def create_token(user: User, user_type: dict[str, Any], async_client: Asyn
     data = {'username': user_type['username'], 'password': user_type['password']}
     resp = await async_client.post('auth/token', data=data)
     return Token.model_validate(resp.json())
+
+
+def create_test_image(*, fmt: str, size: int = config.IMAGE_SIZE) -> io.BytesIO:
+    file = io.BytesIO(b'\0' * size)
+    image = Image.new('RGB', size=(50, 50), color=(155, 0, 0))
+    image.save(file, fmt)
+    file.name = f'test.{fmt}'
+    file.seek(0)
+    return file

@@ -80,7 +80,7 @@ def get_image(filename: str, *, path: ImageType) -> Path:
 
 
 async def _save_image_to_disk(path: Path, image: memoryview) -> None:
-    async with aiofiles.open(path, "wb") as f:
+    async with aiofiles.open(path, 'wb') as f:
         await f.write(image)
         logger.info(f'[save image]: {path}')
 
@@ -92,7 +92,6 @@ async def save_image(file: UploadFile, *, path: ImageType) -> str:
     img_path.mkdir(parents=True, exist_ok=True)
     img_path = img_path / filename
     detected_content_type = filetype.guess(file.file).extension.lower()
-
     if (
         file.content_type not in config.ACCEPTED_FILE_TYPES
         or detected_content_type not in config.ACCEPTED_FILE_TYPES

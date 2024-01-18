@@ -317,15 +317,15 @@ async def test_register_with_different_creds(
 
 
 async def test_refresh_access_token_anonymous(
-    async_client: AsyncClient, anonymous_user_token: str
+    anonymous_user_token: str, async_client: AsyncClient
 ) -> None:
     resp = await async_client.post('auth/refresh', headers={'refresh-token': anonymous_user_token})
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 async def test_refresh_access_token_no_redis(
-    verified_user_token: Token,
     verified_user: User,
+    verified_user_token: Token,
     async_client: AsyncClient,
     redis_client: FakeRedis,
 ) -> None:
@@ -529,7 +529,7 @@ async def test_change_email_with_expired_access_token(
 
 
 async def test_refresh_access_token_with_expired_token(
-    async_client: AsyncClient, verified_user_token: Token, freezer: FrozenDateTimeFactory
+    verified_user_token: Token, async_client: AsyncClient, freezer: FrozenDateTimeFactory
 ) -> None:
     freezer.move_to(datetime.now() + timedelta(seconds=config.JWT_REFRESH_EXPIRATION + 1))
     resp = await async_client.post(
