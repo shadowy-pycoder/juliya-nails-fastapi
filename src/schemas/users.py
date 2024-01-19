@@ -26,8 +26,9 @@ class BaseUser(BaseModel):
 
     @field_validator('password', check_fields=False)
     @classmethod
-    def validate_password(cls, v: str) -> str:
-        check_password_strength(v)
+    def validate_password(cls, v: str | None) -> str | None:
+        if v is not None:
+            check_password_strength(v)
         return v
 
 

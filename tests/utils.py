@@ -1,5 +1,5 @@
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from cryptography.fernet import Fernet
@@ -24,7 +24,7 @@ ADMIN_USER = {
     'hashed_password': bcrypt.hash('admin'),
     'username': 'admin',
     'confirmed': True,
-    'confirmed_on': datetime.now(),
+    'confirmed_on': datetime.now(tz=timezone.utc),
     'active': True,
     'admin': True,
 }
@@ -35,7 +35,7 @@ VERIFIED_USER = {
     'hashed_password': bcrypt.hash('alice'),
     'username': 'alice',
     'confirmed': True,
-    'confirmed_on': datetime.now(),
+    'confirmed_on': datetime.now(tz=timezone.utc),
     'active': True,
     'admin': False,
 }
@@ -57,7 +57,7 @@ INACTIVE_USER = {
     'hashed_password': bcrypt.hash('chuck'),
     'username': 'chuck',
     'confirmed': True,
-    'confirmed_on': datetime.now(),
+    'confirmed_on': datetime.now(tz=timezone.utc),
     'active': False,
     'admin': False,
 }

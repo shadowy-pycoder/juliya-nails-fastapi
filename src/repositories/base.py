@@ -89,8 +89,15 @@ class BaseRepository(
         | BaseSchemaAdminUpdatePartial,
         exclude_unset: bool = False,
         exclude_none: bool = False,
+        exclude_defaults: bool = False,
     ) -> BaseModelType:
-        instance.update(values.model_dump(exclude_unset=exclude_unset, exclude_none=exclude_none))
+        instance.update(
+            values.model_dump(
+                exclude_unset=exclude_unset,
+                exclude_none=exclude_none,
+                exclude_defaults=exclude_defaults,
+            )
+        )
         await self.session.commit()
         await self.session.refresh(instance)
         return instance

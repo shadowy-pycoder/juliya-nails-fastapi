@@ -84,10 +84,14 @@ class EntryRepository(
         values: EntrySchema,
         exclude_unset: bool = False,
         exclude_none: bool = False,
+        exclude_defaults: bool = False,
     ) -> Entry:
         entry.update(
             values.model_dump(
-                exclude={'services'}, exclude_unset=exclude_unset, exclude_none=exclude_none
+                exclude={'services'},
+                exclude_unset=exclude_unset,
+                exclude_none=exclude_none,
+                exclude_defaults=exclude_defaults,
             )
         )
         if values.services is not None:

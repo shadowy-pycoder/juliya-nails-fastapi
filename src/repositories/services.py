@@ -43,6 +43,7 @@ class ServiceRepository(
         values: ServiceSchema,
         exclude_unset: bool = False,
         exclude_none: bool = False,
+        exclude_defaults: bool = False,
     ) -> Service:
         await self.verify_uniqueness(values, ['name'], service)
         return await super().update(
@@ -50,4 +51,5 @@ class ServiceRepository(
             values,
             exclude_unset=exclude_unset,
             exclude_none=exclude_none,
+            exclude_defaults=exclude_defaults,
         )

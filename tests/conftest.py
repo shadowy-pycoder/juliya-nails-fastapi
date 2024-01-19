@@ -5,6 +5,7 @@ from typing import Any, AsyncGenerator, Generator
 
 import fakeredis
 import pytest
+import sqlalchemy as sa
 from fastapi_mail.email_utils import DefaultChecker
 from httpx import AsyncClient
 from PIL import ImageFile
@@ -157,3 +158,9 @@ def load_truncate() -> Generator[None, None, None]:
     ImageFile.LOAD_TRUNCATED_IMAGES = True
     yield
     ImageFile.LOAD_TRUNCATED_IMAGES = False
+
+
+@pytest.fixture(scope='function')
+async def clear_user_data(async_session: AsyncSession) -> None:
+    await async_session.execute(sa.delete(User))
+    await async_session.commit()

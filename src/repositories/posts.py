@@ -53,6 +53,7 @@ class PostRepository(
         values: PostUpdateSchema,
         exclude_unset: bool = False,
         exclude_none: bool = False,
+        exclude_defaults: bool = False,
     ) -> Post:
         await self.verify_uniqueness(values, ['title'], post)
         old_post_image = post.image
@@ -61,6 +62,7 @@ class PostRepository(
             values,
             exclude_unset=exclude_unset,
             exclude_none=exclude_none,
+            exclude_defaults=exclude_defaults,
         )
         delete_image(old_post_image, path=ImageType.POSTS)
         return result
