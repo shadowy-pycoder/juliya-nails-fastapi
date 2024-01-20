@@ -1,6 +1,8 @@
 import io
-from datetime import datetime, timezone
-from typing import Any
+from datetime import date, datetime, time, timedelta, timezone
+from random import randint
+from typing import Any, AsyncGenerator, Callable, Coroutine, TypeAlias
+from uuid import UUID
 
 from cryptography.fernet import Fernet
 from httpx import AsyncClient
@@ -9,6 +11,8 @@ from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import config
+from src.models.entries import Entry
+from src.models.posts import Post
 from src.models.socials import SocialMedia
 from src.models.users import User
 from src.schemas.auth import Token
@@ -75,6 +79,10 @@ USER_DATA = {
 }
 
 
+EntryFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Entry]]]
+PostFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Post]]]
+
+
 def parse_payload(payload: list[Any]) -> str | None:
     msg_split: list[bytes] = payload[0]._payload[0].get_payload(decode=True).split(b'/')
     for msg in msg_split:
@@ -122,3 +130,34 @@ def create_test_image(*, fmt: str, size: int = config.IMAGE_SIZE) -> io.BytesIO:
     file.name = f'test.{fmt}'
     file.seek(0)
     return file
+
+
+async def create_entries(
+    user_id: UUID, count: int, async_session: AsyncSession
+) -> AsyncGenerator[list[Entry], None]:
+    entries = []
+    for _ in range(count):
+        entry_date = date.today() + timedelta(days=randint(0, 7))
+        entry_time = time(hour=randint(0, 23), minute=randint(0, 59))
+        entries.append(Entry(date=entry_date, time=entry_time, user_id=user_id))
+    async_session.add_all(entries)
+    await async_session.commit()
+    yield entries
+    await async_session.delete(entries)
+    await async_session.commit()
+
+
+async def create_posts(
+    user_id: UUID, count: int, async_session: AsyncSession
+) -> AsyncGenerator[list[Post], None]:
+    posts = []
+    for i in range(count):
+        title = f'Post {i} by {user_id}'
+        image = f'Image{i}.jpg'
+        content = f'Content {i}'
+        posts.append(Post(title=title, image=image, content=content, author_id=user_id))
+    async_session.add_all(posts)
+    await async_session.commit()
+    yield posts
+    await async_session.delete(posts)
+    await async_session.commit()

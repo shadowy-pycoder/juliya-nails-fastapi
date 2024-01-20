@@ -1,48 +1,12 @@
 import pytest
 from fastapi import status
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.users import User
 from src.schemas.auth import Token
 from src.schemas.users import UserRead
-
-
-@pytest.mark.usefixtures(
-    'clear_user_data', 'admin_user', 'verified_user', 'unverified_user', 'inactive_user'
-)
-async def test_get_all(
-    admin_user_token: Token,
-    async_client: AsyncClient,
-) -> None:
-    resp = await async_client.get(
-        'users', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    assert len(resp.json()['items']) == 4
-
-
-async def test_get_all_non_admin(
-    verified_user_token: Token,
-    async_client: AsyncClient,
-) -> None:
-    resp = await async_client.get(
-        'users', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-    assert resp.json() == {'detail': 'You are not allowed to perform this operation'}
-
-
-async def test_get_all_inactive_user(
-    inactive_user_token: Token,
-    async_client: AsyncClient,
-) -> None:
-    resp = await async_client.get(
-        'users', headers={'Authorization': f'Bearer {inactive_user_token.access_token}'}
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-    assert resp.json() == {
-        'detail': 'Your account is inactive. Please activate your account to proceed.'
-    }
+from tests.utils import EntryFactory, PostFactory
 
 
 async def test_get_me(
@@ -140,3 +104,51 @@ async def test_patch_me_passwords(
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
     )
     assert resp.json()['detail'][0]['msg'] == f'Value error, {message}'
+
+
+@pytest.mark.parametrize(
+    'populate_entries, expected', [(0, 0), (5, 5)], indirect=['populate_entries']
+)
+async def test_get_my_entries(
+    verified_user: User,
+    verified_user_token: Token,
+    populate_entries: EntryFactory,
+    expected: int,
+    async_session: AsyncSession,
+    async_client: AsyncClient,
+) -> None:
+    await populate_entries(verified_user, async_session)
+    resp = await async_client.get(
+        'users/me/entries', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()['total'] == expected
+
+
+@pytest.mark.parametrize('populate_posts, expected', [(0, 0), (5, 5)], indirect=['populate_posts'])
+async def test_get_my_posts(
+    admin_user: User,
+    admin_user_token: Token,
+    populate_posts: PostFactory,
+    expected: int,
+    async_session: AsyncSession,
+    async_client: AsyncClient,
+) -> None:
+    await populate_posts(admin_user, async_session)
+    resp = await async_client.get(
+        'users/me/posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()['total'] == expected
+
+
+async def test_get_my_socials(
+    verified_user: User,
+    verified_user_token: Token,
+    async_client: AsyncClient,
+) -> None:
+    resp = await async_client.get(
+        'users/me/socials', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()['user']['uuid'] == verified_user.uuid

@@ -9,6 +9,7 @@ import sqlalchemy as sa
 from fastapi_mail.email_utils import DefaultChecker
 from httpx import AsyncClient
 from PIL import ImageFile
+from pytest import FixtureRequest
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
@@ -17,6 +18,8 @@ from src.api.v1.dependencies import default_checker
 from src.core.config import config
 from src.database import Base, get_async_session
 from src.main import app
+from src.models.entries import Entry
+from src.models.posts import Post
 from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
@@ -26,6 +29,10 @@ from tests.utils import (
     INACTIVE_USER,
     UNVERIFIED_USER,
     VERIFIED_USER,
+    EntryFactory,
+    PostFactory,
+    create_entries,
+    create_posts,
     create_token,
     create_user,
     delete_user,
@@ -164,3 +171,19 @@ def load_truncate() -> Generator[None, None, None]:
 async def clear_user_data(async_session: AsyncSession) -> None:
     await async_session.execute(sa.delete(User))
     await async_session.commit()
+
+
+@pytest.fixture(scope='function')
+def populate_entries(request: FixtureRequest) -> EntryFactory:
+    async def entry_list(user: User, async_session: AsyncSession) -> list[Entry]:
+        return await anext(create_entries(user.uuid, request.param, async_session))
+
+    return entry_list
+
+
+@pytest.fixture(scope='function')
+def populate_posts(request: FixtureRequest) -> PostFactory:
+    async def inner(user: User, async_session: AsyncSession) -> list[Post]:
+        return await anext(create_posts(user.uuid, request.param, async_session))
+
+    return inner
