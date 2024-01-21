@@ -106,7 +106,7 @@ class UserAdminUpdate(BaseModel):
     password: Annotated[str, Field(min_length=8)]
     created: datetime
     confirmed: bool
-    confirmed_on: datetime
+    confirmed_on: datetime | None
     active: bool
     admin: bool
 

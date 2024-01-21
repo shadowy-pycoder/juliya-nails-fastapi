@@ -156,6 +156,61 @@ async def test_get_my_socials(
     assert resp.json()['user']['uuid'] == verified_user.uuid
 
 
+async def test_update_my_socials(
+    verified_user: User,
+    verified_user_token: Token,
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+) -> None:
+    data = {
+        'first_name': 'John',
+        'last_name': 'Doe',
+        'phone_number': '+9 999 999 99 99',
+        'viber': '+9 999 999 99 99',
+        'whatsapp': '+9 999 999 99 99',
+        'instagram': 'instagram.com/john_doe',
+        'telegram': 'https://t.me/john_doe',
+        'youtube': 'https://www.youtube.com/channel/john_doe/',
+        'website': 'https://www.example.com/',
+        'vk': 'https://vk.com/john_doe',
+        'about': 'My name is John Doe',
+    }
+    resp = await async_client.put(
+        'users/me/socials',
+        json=data,
+        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    resp_data = SocialRead(**resp.json())
+    await async_session.refresh(verified_user)
+    for k, v in data.items():
+        assert getattr(resp_data, k) == v
+        assert getattr(verified_user.socials, k) == v
+
+
+async def test_patch_my_socials(
+    verified_user: User,
+    verified_user_token: Token,
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+) -> None:
+    data = {
+        'first_name': 'John',
+        'last_name': 'Doe',
+    }
+    resp = await async_client.patch(
+        'users/me/socials',
+        json=data,
+        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    resp_data = SocialRead(**resp.json())
+    await async_session.refresh(verified_user)
+    for k, v in data.items():
+        assert getattr(resp_data, k) == v
+        assert getattr(verified_user.socials, k) == v
+
+
 @pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
 async def test_get_my_avatar(
     verified_user: User,

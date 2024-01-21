@@ -71,6 +71,7 @@ INACTIVE_USER = {
     'admin': False,
 }
 ANONYMOUS_USER = {
+    'uuid': 'a498e5d0-d145-478d-a21c-a480209addb1',
     'username': 'anonymous',
     'email': 'anon@anon.com',
     'password': 'anonymous',
