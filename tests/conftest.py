@@ -20,6 +20,7 @@ from src.database import Base, get_async_session
 from src.main import app
 from src.models.entries import Entry
 from src.models.posts import Post
+from src.models.socials import SocialMedia
 from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
@@ -30,8 +31,10 @@ from tests.utils import (
     UNVERIFIED_USER,
     VERIFIED_USER,
     EntryFactory,
+    ImageFactory,
     PostFactory,
     create_entries,
+    create_image,
     create_posts,
     create_token,
     create_user,
@@ -175,15 +178,29 @@ async def clear_user_data(async_session: AsyncSession) -> None:
 
 @pytest.fixture(scope='function')
 def populate_entries(request: FixtureRequest) -> EntryFactory:
-    async def entry_list(user: User, async_session: AsyncSession) -> list[Entry]:
+    async def inner(user: User, async_session: AsyncSession) -> list[Entry]:
         return await anext(create_entries(user.uuid, request.param, async_session))
 
-    return entry_list
+    return inner
 
 
 @pytest.fixture(scope='function')
 def populate_posts(request: FixtureRequest) -> PostFactory:
     async def inner(user: User, async_session: AsyncSession) -> list[Post]:
         return await anext(create_posts(user.uuid, request.param, async_session))
+
+    return inner
+
+
+@pytest.fixture(scope='function')
+def populate_image(request: FixtureRequest) -> ImageFactory:
+    async def inner(
+        *,
+        fmt: str = 'png',
+        size: int = config.IMAGE_SIZE,
+        instance: SocialMedia | Post | None = None,
+        async_session: AsyncSession | None = None,
+    ) -> tuple[str, Path]:
+        return await create_image(fmt, request.param, size, instance, async_session)
 
     return inner

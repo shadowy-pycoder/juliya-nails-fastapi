@@ -1,12 +1,16 @@
+from pathlib import Path
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import config
 from src.models.users import User
 from src.schemas.auth import Token
+from src.schemas.socials import SocialRead
 from src.schemas.users import UserRead
-from tests.utils import EntryFactory, PostFactory
+from tests.utils import EntryFactory, ImageFactory, PostFactory, create_temp_image
 
 
 async def test_get_me(
@@ -152,3 +156,69 @@ async def test_get_my_socials(
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()['user']['uuid'] == verified_user.uuid
+
+
+@pytest.mark.parametrize('populate_image', [('profiles')], indirect=True)
+async def test_get_my_avatar(
+    verified_user: User,
+    verified_user_token: Token,
+    populate_image: ImageFactory,
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+) -> None:
+    filename, img_path = await populate_image(instance=verified_user, async_session=async_session)
+    resp = await async_client.get(
+        'users/me/socials/avatar',
+        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert verified_user.socials.avatar == filename
+    assert Path.exists(img_path)
+    Path.unlink(img_path)
+
+
+@pytest.mark.parametrize('populate_image', [('profiles')], indirect=True)
+async def test_update_my_avatar(
+    verified_user: User,
+    verified_user_token: Token,
+    populate_image: ImageFactory,
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+) -> None:
+    old_filename, old_img_path = await populate_image(
+        instance=verified_user, async_session=async_session
+    )
+    img = create_temp_image()
+    resp = await async_client.put(
+        'users/me/socials/avatar',
+        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        files={'file': (img.name, img, 'image/png')},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    resp_data = SocialRead(**resp.json())
+    await async_session.refresh(verified_user)
+    assert verified_user.socials.avatar == resp_data.avatar
+    assert resp_data.avatar != old_filename
+    assert Path.exists(old_img_path.parent / resp_data.avatar)
+    assert not Path.exists(old_img_path)
+    Path.unlink(old_img_path.parent / resp_data.avatar)
+
+
+@pytest.mark.parametrize('populate_image', [('profiles')], indirect=True)
+async def test_delete_my_avatar(
+    verified_user: User,
+    verified_user_token: Token,
+    populate_image: ImageFactory,
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+) -> None:
+    filename, img_path = await populate_image(instance=verified_user, async_session=async_session)
+    assert verified_user.socials.avatar == filename
+    resp = await async_client.delete(
+        'users/me/socials/avatar',
+        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_204_NO_CONTENT
+    await async_session.refresh(verified_user)
+    assert verified_user.socials.avatar == config.DEFAULT_AVATAR
+    assert not Path.exists(img_path)

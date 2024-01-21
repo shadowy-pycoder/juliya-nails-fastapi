@@ -1,14 +1,18 @@
 import io
 from datetime import date, datetime, time, timedelta, timezone
+from pathlib import Path
 from random import randint
 from typing import Any, AsyncGenerator, Callable, Coroutine, TypeAlias
 from uuid import UUID
 
+import sqlalchemy as sa
 from cryptography.fernet import Fernet
+from fastapi import UploadFile
 from httpx import AsyncClient
 from passlib.hash import bcrypt
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.datastructures import Headers
 
 from src.core.config import config
 from src.models.entries import Entry
@@ -16,6 +20,7 @@ from src.models.posts import Post
 from src.models.socials import SocialMedia
 from src.models.users import User
 from src.schemas.auth import Token
+from src.utils import ImageType, save_image
 
 VERSION = 'api/v1/'
 
@@ -81,6 +86,7 @@ USER_DATA = {
 
 EntryFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Entry]]]
 PostFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Post]]]
+ImageFactory: TypeAlias = Callable[..., Coroutine[Any, Any, tuple[str, Path]]]
 
 
 def parse_payload(payload: list[Any]) -> str | None:
@@ -123,7 +129,7 @@ async def create_token(user: User, user_type: dict[str, Any], async_client: Asyn
     return Token.model_validate(resp.json())
 
 
-def create_test_image(*, fmt: str, size: int = config.IMAGE_SIZE) -> io.BytesIO:
+def create_temp_image(*, fmt: str = 'png', size: int = config.IMAGE_SIZE) -> io.BytesIO:
     file = io.BytesIO(b'\0' * size)
     image = Image.new('RGB', size=(50, 50), color=(155, 0, 0))
     image.save(file, fmt)
@@ -161,3 +167,31 @@ async def create_posts(
     yield posts
     await async_session.delete(posts)
     await async_session.commit()
+
+
+async def create_image(
+    fmt: str,
+    image_type: str,
+    size: int = config.IMAGE_SIZE,
+    instance: SocialMedia | Post | None = None,
+    async_session: AsyncSession | None = None,
+) -> tuple[str, Path]:
+    img = create_temp_image(fmt=fmt, size=size)
+    filename = await save_image(
+        UploadFile(img, headers=Headers({'Content-Type': f'image/{fmt}'}), filename=img.name),
+        path=ImageType(image_type),
+    )
+    img_path = config.ROOT_DIR / config.UPLOAD_DIR / ImageType(image_type).value / filename
+    if async_session is not None:
+        if isinstance(instance, User):
+            social = (
+                await async_session.execute(sa.select(SocialMedia).filter_by(user_id=instance.uuid))
+            ).scalar_one()
+            social.avatar = filename
+            await async_session.commit()
+            await async_session.refresh(instance)
+        elif isinstance(instance, Post):
+            instance.image = filename
+            await async_session.commit()
+            await async_session.refresh(instance)
+    return filename, img_path

@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi import HTTPException, UploadFile
-from starlette.datastructures import Headers
+from fastapi import HTTPException
 
 from src.core.config import config
 from src.utils import (
@@ -16,9 +15,8 @@ from src.utils import (
     delete_image,
     get_image,
     get_url,
-    save_image,
 )
-from tests.utils import VERSION, create_test_image
+from tests.utils import VERSION, ImageFactory
 
 
 @pytest.mark.parametrize(
@@ -62,34 +60,26 @@ def test_get_image(image_type: str) -> None:
         get_image('test', path=ImageType(image_type))
 
 
-@pytest.mark.parametrize('image_type', [('posts'), ('profiles')])
-async def test_save_image(image_type: str) -> None:
-    img = create_test_image(fmt='png')
-    filename = await save_image(
-        UploadFile(img, headers=Headers({'Content-Type': 'image/png'})), path=ImageType(image_type)
-    )
-    img_path = config.ROOT_DIR / config.UPLOAD_DIR / ImageType(image_type).value / filename
+@pytest.mark.parametrize('populate_image', [('posts'), ('profiles')], indirect=True)
+async def test_save_image(populate_image: ImageFactory) -> None:
+    filename, img_path = await populate_image()
     assert Path.exists(img_path)
     Path.unlink(img_path)
 
 
-@pytest.mark.parametrize('image_type', [('posts'), ('profiles')])
-async def test_save_image_too_large(image_type: str) -> None:
-    img = create_test_image(fmt='png', size=config.IMAGE_SIZE + 1)
+@pytest.mark.parametrize('populate_image', [('posts'), ('profiles')], indirect=True)
+async def test_save_image_too_large(populate_image: ImageFactory) -> None:
     with pytest.raises(HTTPException):
-        await save_image(
-            UploadFile(img, headers=Headers({'Content-Type': 'image/png'})),
-            path=ImageType(image_type),
-        )
+        await populate_image(size=config.IMAGE_SIZE + 1)
 
 
-@pytest.mark.parametrize('image_type', [('posts'), ('profiles')])
-async def test_delete_image(image_type: str) -> None:
-    img = create_test_image(fmt='png')
-    filename = await save_image(
-        UploadFile(img, headers=Headers({'Content-Type': 'image/png'})), path=ImageType(image_type)
-    )
-    img_path = config.ROOT_DIR / config.UPLOAD_DIR / ImageType(image_type).value / filename
+@pytest.mark.parametrize(
+    'populate_image, image_type',
+    [('posts', 'posts'), ('profiles', 'profiles')],
+    indirect=['populate_image'],
+)
+async def test_delete_image(populate_image: ImageFactory, image_type: str) -> None:
+    filename, img_path = await populate_image()
     assert Path.exists(img_path)
     delete_image(filename, path=ImageType(image_type))
     assert not Path.exists(img_path)
