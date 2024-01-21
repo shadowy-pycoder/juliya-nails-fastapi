@@ -177,7 +177,7 @@ async def clear_user_data(async_session: AsyncSession) -> None:
 
 
 @pytest.fixture(scope='function')
-def populate_entries(request: FixtureRequest) -> EntryFactory:
+def entry_factory(request: FixtureRequest) -> EntryFactory:
     async def inner(user: User, async_session: AsyncSession) -> list[Entry]:
         return await anext(create_entries(user.uuid, request.param, async_session))
 
@@ -185,7 +185,7 @@ def populate_entries(request: FixtureRequest) -> EntryFactory:
 
 
 @pytest.fixture(scope='function')
-def populate_posts(request: FixtureRequest) -> PostFactory:
+def post_factory(request: FixtureRequest) -> PostFactory:
     async def inner(user: User, async_session: AsyncSession) -> list[Post]:
         return await anext(create_posts(user.uuid, request.param, async_session))
 
@@ -193,7 +193,7 @@ def populate_posts(request: FixtureRequest) -> PostFactory:
 
 
 @pytest.fixture(scope='function')
-def populate_image(request: FixtureRequest) -> ImageFactory:
+def image_factory(request: FixtureRequest) -> ImageFactory:
     async def inner(
         *,
         fmt: str = 'png',

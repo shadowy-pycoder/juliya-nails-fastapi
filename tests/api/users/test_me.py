@@ -110,18 +110,16 @@ async def test_patch_me_passwords(
     assert resp.json()['detail'][0]['msg'] == f'Value error, {message}'
 
 
-@pytest.mark.parametrize(
-    'populate_entries, expected', [(0, 0), (5, 5)], indirect=['populate_entries']
-)
+@pytest.mark.parametrize('entry_factory, expected', [(0, 0), (5, 5)], indirect=['entry_factory'])
 async def test_get_my_entries(
     verified_user: User,
     verified_user_token: Token,
-    populate_entries: EntryFactory,
+    entry_factory: EntryFactory,
     expected: int,
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    await populate_entries(verified_user, async_session)
+    await entry_factory(verified_user, async_session)
     resp = await async_client.get(
         'users/me/entries', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
     )
@@ -129,16 +127,16 @@ async def test_get_my_entries(
     assert resp.json()['total'] == expected
 
 
-@pytest.mark.parametrize('populate_posts, expected', [(0, 0), (5, 5)], indirect=['populate_posts'])
+@pytest.mark.parametrize('post_factory, expected', [(0, 0), (5, 5)], indirect=['post_factory'])
 async def test_get_my_posts(
     admin_user: User,
     admin_user_token: Token,
-    populate_posts: PostFactory,
+    post_factory: PostFactory,
     expected: int,
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    await populate_posts(admin_user, async_session)
+    await post_factory(admin_user, async_session)
     resp = await async_client.get(
         'users/me/posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
     )
@@ -158,15 +156,15 @@ async def test_get_my_socials(
     assert resp.json()['user']['uuid'] == verified_user.uuid
 
 
-@pytest.mark.parametrize('populate_image', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
 async def test_get_my_avatar(
     verified_user: User,
     verified_user_token: Token,
-    populate_image: ImageFactory,
+    image_factory: ImageFactory,
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path = await populate_image(instance=verified_user, async_session=async_session)
+    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
     resp = await async_client.get(
         'users/me/socials/avatar',
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
@@ -177,15 +175,15 @@ async def test_get_my_avatar(
     Path.unlink(img_path)
 
 
-@pytest.mark.parametrize('populate_image', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
 async def test_update_my_avatar(
     verified_user: User,
     verified_user_token: Token,
-    populate_image: ImageFactory,
+    image_factory: ImageFactory,
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    old_filename, old_img_path = await populate_image(
+    old_filename, old_img_path = await image_factory(
         instance=verified_user, async_session=async_session
     )
     img = create_temp_image()
@@ -204,15 +202,15 @@ async def test_update_my_avatar(
     Path.unlink(old_img_path.parent / resp_data.avatar)
 
 
-@pytest.mark.parametrize('populate_image', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
 async def test_delete_my_avatar(
     verified_user: User,
     verified_user_token: Token,
-    populate_image: ImageFactory,
+    image_factory: ImageFactory,
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path = await populate_image(instance=verified_user, async_session=async_session)
+    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
     assert verified_user.socials.avatar == filename
     resp = await async_client.delete(
         'users/me/socials/avatar',
