@@ -151,7 +151,7 @@ async def test_get_user_entries(
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    await entry_factory(verified_user, async_session)
+    await entry_factory([verified_user], async_session)
     resp = await async_client.get(
         f'users/{verified_user.uuid}/entries',
         headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
@@ -273,11 +273,11 @@ async def test_get_user_avatar(
     verified_user: User,
     verified_user_token: Token,
     unverified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
+    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
     resp = await async_client.get(
         f'users/{verified_user.uuid}/socials/avatar',
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
@@ -298,11 +298,11 @@ async def test_update_user_avatar(
     admin_user_token: Token,
     verified_user: User,
     verified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    old_filename, old_img_path = await image_factory(
+    old_filename, old_img_path, _ = await image_factory(
         instance=verified_user, async_session=async_session
     )
     img = create_temp_image()
@@ -332,11 +332,11 @@ async def test_delete_user_avatar(
     admin_user_token: Token,
     verified_user: User,
     verified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
+    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
     assert verified_user.socials.avatar == filename
     resp = await async_client.delete(
         f'users/{verified_user.uuid}/socials/avatar',

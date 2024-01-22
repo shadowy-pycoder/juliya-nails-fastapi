@@ -35,11 +35,11 @@ async def test_get_one(
     admin_user_token: Token,
     verified_user: User,
     verified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
+    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
     resp = await async_client.get(
         f'socials/{verified_user.socials.uuid}',
         headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
@@ -60,11 +60,11 @@ async def test_update_one(
     admin_user_token: Token,
     verified_user: User,
     verified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
+    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
     resp = await async_client.put(
         f'socials/{verified_user.socials.uuid}',
         json=SOCIAL_DATA,
@@ -90,11 +90,11 @@ async def test_patch_one(
     admin_user_token: Token,
     verified_user: User,
     verified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
+    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
     data = {
         'first_name': 'John',
         'last_name': 'Doe',
@@ -124,11 +124,11 @@ async def test_delete_one(
     admin_user_token: Token,
     verified_user: User,
     verified_user_token: Token,
-    image_factory: ImageFactory,
+    image_factory: ImageFactory[User],
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path = await image_factory(instance=verified_user, async_session=async_session)
+    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
     resp = await async_client.delete(
         f'socials/{verified_user.socials.uuid}',
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},

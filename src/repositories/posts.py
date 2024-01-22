@@ -64,7 +64,8 @@ class PostRepository(
             exclude_none=exclude_none,
             exclude_defaults=exclude_defaults,
         )
-        delete_image(old_post_image, path=ImageType.POSTS)
+        if values.image is not None:
+            delete_image(old_post_image, path=ImageType.POSTS)
         return result
 
     async def delete(self, post: Post) -> None:

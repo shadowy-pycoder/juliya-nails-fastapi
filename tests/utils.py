@@ -2,7 +2,7 @@ import io
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from random import randint
-from typing import Any, AsyncGenerator, Callable, Coroutine, TypeAlias
+from typing import Any, AsyncGenerator, Callable, Coroutine, TypeAlias, TypeVar
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -98,10 +98,10 @@ SOCIAL_DATA = {
     'about': 'My name is John Doe',
 }
 
-
-EntryFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Entry]]]
+T = TypeVar('T', User, Post, None)
+EntryFactory: TypeAlias = Callable[[list[User], AsyncSession], Coroutine[Any, Any, list[Entry]]]
 PostFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Post]]]
-ImageFactory: TypeAlias = Callable[..., Coroutine[Any, Any, tuple[str, Path]]]
+ImageFactory: TypeAlias = Callable[..., Coroutine[Any, Any, tuple[str, Path, T]]]
 
 
 def parse_payload(payload: list[Any]) -> str | None:
@@ -154,13 +154,14 @@ def create_temp_image(*, fmt: str = 'png', size: int = config.IMAGE_SIZE) -> io.
 
 
 async def create_entries(
-    user_id: UUID, count: int, async_session: AsyncSession
+    users: list[User], count: int, async_session: AsyncSession
 ) -> AsyncGenerator[list[Entry], None]:
     entries = []
-    for _ in range(count):
-        entry_date = date.today() + timedelta(days=randint(0, 7))
-        entry_time = time(hour=randint(0, 23), minute=randint(0, 59))
-        entries.append(Entry(date=entry_date, time=entry_time, user_id=user_id))
+    for user in users:
+        for _ in range(count):
+            entry_date = date.today() + timedelta(days=randint(0, 7))
+            entry_time = time(hour=randint(0, 23), minute=randint(0, 59))
+            entries.append(Entry(date=entry_date, time=entry_time, user_id=user.uuid))
     async_session.add_all(entries)
     await async_session.commit()
     yield entries
@@ -187,10 +188,10 @@ async def create_posts(
 async def create_image(
     fmt: str,
     image_type: str,
-    size: int = config.IMAGE_SIZE,
-    instance: SocialMedia | Post | None = None,
+    size: int,
+    instance: T,
     async_session: AsyncSession | None = None,
-) -> tuple[str, Path]:
+) -> tuple[str, Path, T]:
     img = create_temp_image(fmt=fmt, size=size)
     filename = await save_image(
         UploadFile(img, headers=Headers({'Content-Type': f'image/{fmt}'}), filename=img.name),
@@ -203,10 +204,13 @@ async def create_image(
                 await async_session.execute(sa.select(SocialMedia).filter_by(user_id=instance.uuid))
             ).scalar_one()
             social.avatar = filename
+            async_session.add(instance)
             await async_session.commit()
             await async_session.refresh(instance)
+            await async_session.refresh(social)
         elif isinstance(instance, Post):
             instance.image = filename
+            async_session.add(instance)
             await async_session.commit()
             await async_session.refresh(instance)
-    return filename, img_path
+    return filename, img_path, instance
