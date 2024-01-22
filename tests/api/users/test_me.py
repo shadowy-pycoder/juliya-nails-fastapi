@@ -10,7 +10,7 @@ from src.models.users import User
 from src.schemas.auth import Token
 from src.schemas.socials import SocialRead
 from src.schemas.users import UserRead
-from tests.utils import EntryFactory, ImageFactory, PostFactory, create_temp_image
+from tests.utils import SOCIAL_DATA, EntryFactory, ImageFactory, PostFactory, create_temp_image
 
 
 async def test_get_me(
@@ -162,28 +162,15 @@ async def test_update_my_socials(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    data = {
-        'first_name': 'John',
-        'last_name': 'Doe',
-        'phone_number': '+9 999 999 99 99',
-        'viber': '+9 999 999 99 99',
-        'whatsapp': '+9 999 999 99 99',
-        'instagram': 'instagram.com/john_doe',
-        'telegram': 'https://t.me/john_doe',
-        'youtube': 'https://www.youtube.com/channel/john_doe/',
-        'website': 'https://www.example.com/',
-        'vk': 'https://vk.com/john_doe',
-        'about': 'My name is John Doe',
-    }
     resp = await async_client.put(
         'users/me/socials',
-        json=data,
+        json=SOCIAL_DATA,
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
     )
     assert resp.status_code == status.HTTP_200_OK
     resp_data = SocialRead(**resp.json())
     await async_session.refresh(verified_user)
-    for k, v in data.items():
+    for k, v in SOCIAL_DATA.items():
         assert getattr(resp_data, k) == v
         assert getattr(verified_user.socials, k) == v
 

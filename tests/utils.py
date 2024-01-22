@@ -84,6 +84,20 @@ USER_DATA = {
     'confirm_password': 'carol#3C',
 }
 
+SOCIAL_DATA = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'phone_number': '+9 999 999 99 99',
+    'viber': '+9 999 999 99 99',
+    'whatsapp': '+9 999 999 99 99',
+    'instagram': 'instagram.com/john_doe',
+    'telegram': 'https://t.me/john_doe',
+    'youtube': 'https://www.youtube.com/channel/john_doe/',
+    'website': 'https://www.example.com/',
+    'vk': 'https://vk.com/john_doe',
+    'about': 'My name is John Doe',
+}
+
 
 EntryFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Entry]]]
 PostFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Post]]]
