@@ -154,7 +154,7 @@ async def test_get_my_socials(
         'users/me/socials', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
     )
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['user']['uuid'] == verified_user.uuid
+    assert resp.json()['user']['uuid'] == str(verified_user.uuid)
 
 
 async def test_update_my_socials(

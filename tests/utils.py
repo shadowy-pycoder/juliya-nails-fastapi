@@ -28,7 +28,7 @@ VERSION = 'api/v1/'
 BASE_URL = f'http://testserver/{VERSION}'
 
 ADMIN_USER = {
-    'uuid': '5ad22093-194e-429c-b2af-cb531c7267c1',
+    'uuid': UUID('5ad22093-194e-429c-b2af-cb531c7267c1'),
     'email': 'admin@admin.com',
     'password': 'admin',
     'hashed_password': bcrypt.hash('admin'),
@@ -39,7 +39,7 @@ ADMIN_USER = {
     'admin': True,
 }
 VERIFIED_USER = {
-    'uuid': '950f8c5f-ad0c-4fb7-a693-dc42c7ea453a',
+    'uuid': UUID('950f8c5f-ad0c-4fb7-a693-dc42c7ea453a'),
     'email': 'alice@alice.com',
     'password': 'alice',
     'hashed_password': bcrypt.hash('alice'),
@@ -50,7 +50,7 @@ VERIFIED_USER = {
     'admin': False,
 }
 UNVERIFIED_USER = {
-    'uuid': '764a3113-7d87-4345-8c91-d68e2464b060',
+    'uuid': UUID('764a3113-7d87-4345-8c91-d68e2464b060'),
     'email': 'bob@bob.com',
     'password': 'bob',
     'hashed_password': bcrypt.hash('bob'),
@@ -61,7 +61,7 @@ UNVERIFIED_USER = {
     'admin': False,
 }
 INACTIVE_USER = {
-    'uuid': 'a1685c3b-1034-4b75-ad8c-16c8a3408cab',
+    'uuid': UUID('a1685c3b-1034-4b75-ad8c-16c8a3408cab'),
     'email': 'chuck@chuck.com',
     'password': 'chuck',
     'hashed_password': bcrypt.hash('chuck'),
@@ -72,7 +72,7 @@ INACTIVE_USER = {
     'admin': False,
 }
 ANONYMOUS_USER = {
-    'uuid': 'a498e5d0-d145-478d-a21c-a480209addb1',
+    'uuid': UUID('a498e5d0-d145-478d-a21c-a480209addb1'),
     'username': 'anonymous',
     'email': 'anon@anon.com',
     'password': 'anonymous',

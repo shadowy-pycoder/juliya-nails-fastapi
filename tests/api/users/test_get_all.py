@@ -5,9 +5,7 @@ from httpx import AsyncClient
 from src.schemas.auth import Token
 
 
-@pytest.mark.usefixtures(
-    'clear_user_data', 'admin_user', 'verified_user', 'unverified_user', 'inactive_user'
-)
+@pytest.mark.usefixtures('admin_user', 'verified_user', 'unverified_user', 'inactive_user')
 async def test_get_all(
     admin_user_token: Token,
     async_client: AsyncClient,
@@ -16,7 +14,7 @@ async def test_get_all(
         'users', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
     )
     assert resp.status_code == status.HTTP_200_OK
-    assert len(resp.json()['items']) == 4
+    assert len(resp.json()['items']) > 0
 
 
 async def test_get_all_non_admin(

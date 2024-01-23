@@ -204,7 +204,7 @@ async def test_get_user_socials(
         headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
     )
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['user']['uuid'] == verified_user.uuid
+    assert resp.json()['user']['uuid'] == str(verified_user.uuid)
     resp = await async_client.get(
         f'users/{verified_user.uuid}/socials',
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},

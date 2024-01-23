@@ -23,7 +23,7 @@ async def test_refresh_access_token_no_redis(
     async_client: AsyncClient,
     redis_client: FakeRedis,
 ) -> None:
-    await redis_client.hdel(config.REDIS_HASH, verified_user.uuid)
+    await redis_client.hdel(config.REDIS_HASH, str(verified_user.uuid))
     resp = await async_client.post(
         'auth/refresh', headers={'refresh-token': verified_user_token.refresh_token}
     )

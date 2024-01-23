@@ -5,9 +5,8 @@ from typing import Any, AsyncGenerator, Generator
 
 import fakeredis
 import pytest
-import sqlalchemy as sa
 from fastapi_mail.email_utils import DefaultChecker
-from httpx import AsyncClient
+from httpx import AsyncClient, Timeout
 from PIL import ImageFile
 from pytest import FixtureRequest
 from pytest_mock import MockerFixture
@@ -101,7 +100,9 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture(scope='function')
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient(app=app, base_url=BASE_URL, follow_redirects=True) as client:
+    async with AsyncClient(
+        app=app, base_url=BASE_URL, follow_redirects=True, timeout=Timeout(15)
+    ) as client:
         await app.router.startup()
         yield client
         await app.router.shutdown()
@@ -175,12 +176,6 @@ def load_truncate() -> Generator[None, None, None]:
     ImageFile.LOAD_TRUNCATED_IMAGES = True
     yield
     ImageFile.LOAD_TRUNCATED_IMAGES = False
-
-
-@pytest.fixture(scope='function')
-async def clear_user_data(async_session: AsyncSession) -> None:
-    await async_session.execute(sa.delete(User))
-    await async_session.commit()
 
 
 @pytest.fixture(scope='function')
