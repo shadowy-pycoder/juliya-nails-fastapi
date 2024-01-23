@@ -20,6 +20,7 @@ from src.database import Base, get_async_session
 from src.main import app
 from src.models.entries import Entry
 from src.models.posts import Post
+from src.models.services import Service
 from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
@@ -27,6 +28,7 @@ from tests.utils import (
     ADMIN_USER,
     BASE_URL,
     INACTIVE_USER,
+    SERVICES,
     UNVERIFIED_USER,
     VERIFIED_USER,
     EntryFactory,
@@ -76,14 +78,19 @@ def mock_rate_limiter(mocker: MockerFixture) -> fakeredis.aioredis.FakeRedis:
     return redis_mock
 
 
+async def drop_all() -> None:
+    async with engine_test.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
 @pytest.fixture(autouse=True, scope='session')
 async def prepare_database() -> AsyncGenerator[None, None]:
     assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
+    await drop_all()
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    async with engine_test.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    await drop_all()
 
 
 @pytest.fixture(scope='function')
@@ -178,18 +185,31 @@ async def clear_user_data(async_session: AsyncSession) -> None:
 
 @pytest.fixture(scope='function')
 def entry_factory(request: FixtureRequest) -> EntryFactory:
-    async def inner(users: list[User], async_session: AsyncSession) -> list[Entry]:
-        return await anext(create_entries(users, request.param, async_session))
+    async def inner(
+        users: list[User], async_session: AsyncSession
+    ) -> AsyncGenerator[list[Entry], None]:
+        return create_entries(users, request.param, async_session)
 
     return inner
 
 
 @pytest.fixture(scope='function')
 def post_factory(request: FixtureRequest) -> PostFactory:
-    async def inner(user: User, async_session: AsyncSession) -> list[Post]:
-        return await anext(create_posts(user.uuid, request.param, async_session))
+    async def inner(user: User, async_session: AsyncSession) -> AsyncGenerator[list[Post], None]:
+        return create_posts(user.uuid, request.param, async_session)
 
     return inner
+
+
+@pytest.fixture(scope='function')
+async def service_list(async_session: AsyncSession) -> AsyncGenerator[list[Service], None]:
+    services = [Service(**data) for data in SERVICES]
+    async_session.add_all(services)
+    await async_session.commit()
+    yield services
+    for service in services:
+        await async_session.delete(service)
+    await async_session.commit()
 
 
 @pytest.fixture(scope='function')
@@ -200,7 +220,7 @@ def image_factory(request: FixtureRequest) -> ImageFactory[T]:
         size: int = config.IMAGE_SIZE,
         instance: T,
         async_session: AsyncSession | None = None,
-    ) -> tuple[str, Path, T]:
-        return await create_image(fmt, request.param, size, instance, async_session)
+    ) -> AsyncGenerator[tuple[str, Path, T], None]:
+        return create_image(fmt, request.param, size, instance, async_session)
 
     return inner

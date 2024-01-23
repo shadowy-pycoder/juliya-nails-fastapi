@@ -119,15 +119,16 @@ async def test_get_my_entries(
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    await entry_factory([verified_user], async_session)
-    resp = await async_client.get(
-        'users/me/entries', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total'] == expected
+    async for _ in await entry_factory([verified_user], async_session):
+        resp = await async_client.get(
+            'users/me/entries',
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()['total'] == expected
 
 
-@pytest.mark.parametrize('post_factory, expected', [(0, 0), (5, 5)], indirect=['post_factory'])
+@pytest.mark.parametrize('post_factory, expected', [(1, 1), (5, 5)], indirect=['post_factory'])
 async def test_get_my_posts(
     admin_user: User,
     admin_user_token: Token,
@@ -136,12 +137,12 @@ async def test_get_my_posts(
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    await post_factory(admin_user, async_session)
-    resp = await async_client.get(
-        'users/me/posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()['total'] == expected
+    async for _ in await post_factory(admin_user, async_session):
+        resp = await async_client.get(
+            'users/me/posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()['total'] == expected
 
 
 async def test_get_my_socials(
@@ -206,15 +207,16 @@ async def test_get_my_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
-    resp = await async_client.get(
-        'users/me/socials/avatar',
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    assert verified_user.socials.avatar == filename
-    assert Path.exists(img_path)
-    Path.unlink(img_path)
+    async for filename, img_path, _ in await image_factory(
+        instance=verified_user, async_session=async_session
+    ):
+        resp = await async_client.get(
+            'users/me/socials/avatar',
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert verified_user.socials.avatar == filename
+        assert Path.exists(img_path)
 
 
 @pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
@@ -225,23 +227,23 @@ async def test_update_my_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    old_filename, old_img_path, _ = await image_factory(
+    async for old_filename, old_img_path, _ in await image_factory(
         instance=verified_user, async_session=async_session
-    )
-    img = create_temp_image()
-    resp = await async_client.put(
-        'users/me/socials/avatar',
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-        files={'file': (img.name, img, 'image/png')},
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    resp_data = SocialRead(**resp.json())
-    await async_session.refresh(verified_user)
-    assert verified_user.socials.avatar == resp_data.avatar
-    assert resp_data.avatar != old_filename
-    assert Path.exists(old_img_path.parent / resp_data.avatar)
-    assert not Path.exists(old_img_path)
-    Path.unlink(old_img_path.parent / resp_data.avatar)
+    ):
+        img = create_temp_image()
+        resp = await async_client.put(
+            'users/me/socials/avatar',
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+            files={'file': (img.name, img, 'image/png')},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        resp_data = SocialRead(**resp.json())
+        await async_session.refresh(verified_user)
+        assert verified_user.socials.avatar == resp_data.avatar
+        assert resp_data.avatar != old_filename
+        assert Path.exists(old_img_path.parent / resp_data.avatar)
+        assert not Path.exists(old_img_path)
+        Path.unlink(old_img_path.parent / resp_data.avatar)
 
 
 @pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
@@ -252,13 +254,15 @@ async def test_delete_my_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
-    assert verified_user.socials.avatar == filename
-    resp = await async_client.delete(
-        'users/me/socials/avatar',
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
-    await async_session.refresh(verified_user)
-    assert verified_user.socials.avatar == config.DEFAULT_AVATAR
-    assert not Path.exists(img_path)
+    async for filename, img_path, _ in await image_factory(
+        instance=verified_user, async_session=async_session
+    ):
+        assert verified_user.socials.avatar == filename
+        resp = await async_client.delete(
+            'users/me/socials/avatar',
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_204_NO_CONTENT
+        await async_session.refresh(verified_user)
+        assert verified_user.socials.avatar == config.DEFAULT_AVATAR
+        assert not Path.exists(img_path)

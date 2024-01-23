@@ -62,15 +62,15 @@ def test_get_image(image_type: str) -> None:
 
 @pytest.mark.parametrize('image_factory', [('posts'), ('profiles')], indirect=True)
 async def test_save_image(image_factory: ImageFactory[None]) -> None:
-    filename, img_path, _ = await image_factory(instance=None)
-    assert Path.exists(img_path)
-    Path.unlink(img_path)
+    async for _, img_path, _ in await image_factory(instance=None):
+        assert Path.exists(img_path)
 
 
 @pytest.mark.parametrize('image_factory', [('posts'), ('profiles')], indirect=True)
 async def test_save_image_too_large(image_factory: ImageFactory[None]) -> None:
     with pytest.raises(HTTPException):
-        await image_factory(size=config.IMAGE_SIZE + 1, instance=None)
+        async for _ in await image_factory(size=config.IMAGE_SIZE + 1, instance=None):
+            pass
 
 
 @pytest.mark.parametrize(
@@ -79,7 +79,7 @@ async def test_save_image_too_large(image_factory: ImageFactory[None]) -> None:
     indirect=['image_factory'],
 )
 async def test_delete_image(image_factory: ImageFactory[None], image_type: str) -> None:
-    filename, img_path, _ = await image_factory(instance=None)
-    assert Path.exists(img_path)
-    delete_image(filename, path=ImageType(image_type))
-    assert not Path.exists(img_path)
+    async for filename, img_path, _ in await image_factory(instance=None):
+        assert Path.exists(img_path)
+        delete_image(filename, path=ImageType(image_type))
+        assert not Path.exists(img_path)

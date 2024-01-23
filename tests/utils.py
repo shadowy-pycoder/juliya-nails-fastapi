@@ -17,6 +17,7 @@ from starlette.datastructures import Headers
 from src.core.config import config
 from src.models.entries import Entry
 from src.models.posts import Post
+from src.models.services import Service
 from src.models.socials import SocialMedia
 from src.models.users import User
 from src.schemas.auth import Token
@@ -98,10 +99,24 @@ SOCIAL_DATA = {
     'about': 'My name is John Doe',
 }
 
+SERVICES = [
+    {'uuid': UUID('e1c9ae56-c592-4fdb-a880-f567e1d0d75b'), 'name': 'Service 1', 'duration': 10},
+    {'uuid': UUID('729c1c06-29ec-4058-be9d-e1b543da9794'), 'name': 'Service 2', 'duration': 30},
+    {'uuid': UUID('4b5d4ed3-033b-4ccb-82ed-304cd04ff79b'), 'name': 'Service 3', 'duration': 60},
+    {'uuid': UUID('7037d2a2-10e4-4d91-abd0-5cca14c35ec7'), 'name': 'Service 4', 'duration': 90},
+    {'uuid': UUID('e9b13e10-ad34-4716-a46e-c4f989844fe7'), 'name': 'Service 5', 'duration': 120},
+]
+
 T = TypeVar('T', User, Post, None)
-EntryFactory: TypeAlias = Callable[[list[User], AsyncSession], Coroutine[Any, Any, list[Entry]]]
-PostFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, list[Post]]]
-ImageFactory: TypeAlias = Callable[..., Coroutine[Any, Any, tuple[str, Path, T]]]
+EntryFactory: TypeAlias = Callable[
+    [list[User], AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Entry], None]]
+]
+PostFactory: TypeAlias = Callable[
+    [User, AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Post], None]]
+]
+ImageFactory: TypeAlias = Callable[
+    ..., Coroutine[Any, Any, AsyncGenerator[tuple[str, Path, T], None]]
+]
 
 
 def parse_payload(payload: list[Any]) -> str | None:
@@ -157,15 +172,27 @@ async def create_entries(
     users: list[User], count: int, async_session: AsyncSession
 ) -> AsyncGenerator[list[Entry], None]:
     entries = []
+    services = [Service(**data) for data in SERVICES]
     for user in users:
         for _ in range(count):
             entry_date = date.today() + timedelta(days=randint(0, 7))
             entry_time = time(hour=randint(0, 23), minute=randint(0, 59))
-            entries.append(Entry(date=entry_date, time=entry_time, user_id=user.uuid))
+            entries.append(
+                Entry(
+                    date=entry_date,
+                    time=entry_time,
+                    services=services[randint(0, len(services) - 1) :],
+                    user_id=user.uuid,
+                )
+            )
     async_session.add_all(entries)
+    async_session.add_all(services)
     await async_session.commit()
     yield entries
-    await async_session.delete(entries)
+    for entry in entries:
+        await async_session.delete(entry)
+    for service in services:
+        await async_session.delete(service)
     await async_session.commit()
 
 
@@ -181,7 +208,8 @@ async def create_posts(
     async_session.add_all(posts)
     await async_session.commit()
     yield posts
-    await async_session.delete(posts)
+    for post in posts:
+        await async_session.delete(post)
     await async_session.commit()
 
 
@@ -191,7 +219,7 @@ async def create_image(
     size: int,
     instance: T,
     async_session: AsyncSession | None = None,
-) -> tuple[str, Path, T]:
+) -> AsyncGenerator[tuple[str, Path, T], None]:
     img = create_temp_image(fmt=fmt, size=size)
     filename = await save_image(
         UploadFile(img, headers=Headers({'Content-Type': f'image/{fmt}'}), filename=img.name),
@@ -213,4 +241,5 @@ async def create_image(
             async_session.add(instance)
             await async_session.commit()
             await async_session.refresh(instance)
-    return filename, img_path, instance
+    yield filename, img_path, instance
+    Path.unlink(img_path, missing_ok=True)

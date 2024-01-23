@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -39,20 +37,19 @@ async def test_get_one(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
-    resp = await async_client.get(
-        f'socials/{verified_user.socials.uuid}',
-        headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
-    )
-    await async_session.refresh(verified_user)
-    assert resp.status_code == status.HTTP_200_OK
-    assert str(verified_user.socials.uuid) == resp.json()['uuid']
-    resp = await async_client.get(
-        f'socials/{verified_user.socials.uuid}',
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-    Path.unlink(img_path)
+    async for _ in await image_factory(instance=verified_user, async_session=async_session):
+        resp = await async_client.get(
+            f'socials/{verified_user.socials.uuid}',
+            headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
+        )
+        await async_session.refresh(verified_user)
+        assert resp.status_code == status.HTTP_200_OK
+        assert str(verified_user.socials.uuid) == resp.json()['uuid']
+        resp = await async_client.get(
+            f'socials/{verified_user.socials.uuid}',
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
@@ -64,25 +61,24 @@ async def test_update_one(
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
-    resp = await async_client.put(
-        f'socials/{verified_user.socials.uuid}',
-        json=SOCIAL_DATA,
-        headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    resp_data = SocialRead(**resp.json())
-    await async_session.refresh(verified_user)
-    for k, v in SOCIAL_DATA.items():
-        assert getattr(resp_data, k) == v
-        assert getattr(verified_user.socials, k) == v
-    resp = await async_client.put(
-        f'socials/{verified_user.socials.uuid}',
-        json=SOCIAL_DATA,
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-    Path.unlink(img_path)
+    async for _ in await image_factory(instance=verified_user, async_session=async_session):
+        resp = await async_client.put(
+            f'socials/{verified_user.socials.uuid}',
+            json=SOCIAL_DATA,
+            headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        resp_data = SocialRead(**resp.json())
+        await async_session.refresh(verified_user)
+        for k, v in SOCIAL_DATA.items():
+            assert getattr(resp_data, k) == v
+            assert getattr(verified_user.socials, k) == v
+        resp = await async_client.put(
+            f'socials/{verified_user.socials.uuid}',
+            json=SOCIAL_DATA,
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
@@ -94,29 +90,28 @@ async def test_patch_one(
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
-    data = {
-        'first_name': 'John',
-        'last_name': 'Doe',
-    }
-    resp = await async_client.patch(
-        f'socials/{verified_user.socials.uuid}',
-        json=data,
-        headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_200_OK
-    resp_data = SocialRead(**resp.json())
-    await async_session.refresh(verified_user)
-    for k, v in data.items():
-        assert getattr(resp_data, k) == v
-        assert getattr(verified_user.socials, k) == v
-    resp = await async_client.patch(
-        f'socials/{verified_user.socials.uuid}',
-        json=data,
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-    Path.unlink(img_path)
+    async for _ in await image_factory(instance=verified_user, async_session=async_session):
+        data = {
+            'first_name': 'John',
+            'last_name': 'Doe',
+        }
+        resp = await async_client.patch(
+            f'socials/{verified_user.socials.uuid}',
+            json=data,
+            headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        resp_data = SocialRead(**resp.json())
+        await async_session.refresh(verified_user)
+        for k, v in data.items():
+            assert getattr(resp_data, k) == v
+            assert getattr(verified_user.socials, k) == v
+        resp = await async_client.patch(
+            f'socials/{verified_user.socials.uuid}',
+            json=data,
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
@@ -128,17 +123,16 @@ async def test_delete_one(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    filename, img_path, _ = await image_factory(instance=verified_user, async_session=async_session)
-    resp = await async_client.delete(
-        f'socials/{verified_user.socials.uuid}',
-        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-    resp = await async_client.delete(
-        f'socials/{verified_user.socials.uuid}',
-        headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
-    )
-    assert resp.status_code == status.HTTP_204_NO_CONTENT
-    await async_session.refresh(verified_user)
-    assert verified_user.socials is None
-    Path.unlink(img_path)
+    async for _ in await image_factory(instance=verified_user, async_session=async_session):
+        resp = await async_client.delete(
+            f'socials/{verified_user.socials.uuid}',
+            headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+        resp = await async_client.delete(
+            f'socials/{verified_user.socials.uuid}',
+            headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
+        )
+        assert resp.status_code == status.HTTP_204_NO_CONTENT
+        await async_session.refresh(verified_user)
+        assert verified_user.socials is None
