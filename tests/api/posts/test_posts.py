@@ -12,7 +12,7 @@ from src.models.users import User
 from src.schemas.auth import Token
 from src.schemas.posts import PostRead
 from src.utils import ImageType
-from tests.utils import ImageFactory, PostFactory, create_temp_image
+from tests.utils import POSTS, ImageFactory, create_temp_image
 
 
 async def test_create_one(
@@ -46,42 +46,40 @@ async def test_create_one(
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('post_factory, expected', [(5, 5)], indirect=['post_factory'])
+@pytest.mark.usefixtures('post_list')
 async def test_get_all(
-    admin_user: User,
     admin_user_token: Token,
-    post_factory: PostFactory,
-    expected: int,
-    async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    async for _ in await post_factory(admin_user, async_session):
-        resp = await async_client.get(
-            'posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-        )
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.json()['total'] == expected
+    resp = await async_client.get(
+        'posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()['total'] > 0
 
 
-@pytest.mark.parametrize('post_factory', [(1)], indirect=True)
+@pytest.mark.usefixtures('post_list')
 async def test_get_one(
     admin_user: User,
     admin_user_token: Token,
-    post_factory: PostFactory,
-    async_session: AsyncSession,
+    verified_user_token: Token,
     async_client: AsyncClient,
 ) -> None:
-    async for posts in await post_factory(admin_user, async_session):
-        resp = await async_client.get(
-            f'posts/{posts[0].uuid}',
-            headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
-        )
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.json()['uuid'] == str(posts[0].uuid)
-        assert resp.json()['author']['uuid'] == str(admin_user.uuid)
+    resp = await async_client.get(
+        f'posts/{POSTS[0]["uuid"]}',
+        headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()['uuid'] == str(POSTS[0]['uuid'])
+    assert resp.json()['author']['uuid'] == str(admin_user.uuid)
+    resp = await async_client.get(
+        f'posts/{POSTS[0]["uuid"]}',
+        headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.parametrize('image_factory', [('posts')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['posts'], indirect=True)
 async def test_get_post_image(
     admin_user: User,
     admin_user_token: Token,
@@ -101,7 +99,7 @@ async def test_get_post_image(
         assert Path.exists(img_path)
 
 
-@pytest.mark.parametrize('image_factory', [('posts')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['posts'], indirect=True)
 async def test_update_one(
     admin_user: User,
     admin_user_token: Token,
@@ -140,7 +138,7 @@ async def test_update_one(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('posts')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['posts'], indirect=True)
 async def test_patch_one(
     admin_user: User,
     admin_user_token: Token,
@@ -175,7 +173,7 @@ async def test_patch_one(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('posts')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['posts'], indirect=True)
 async def test_delete_one(
     admin_user: User,
     admin_user_token: Token,

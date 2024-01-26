@@ -44,14 +44,14 @@ def test_check_password_strength(
 
 @pytest.mark.parametrize(
     'module',
-    [('users'), ('entries'), ('posts'), ('services'), ('socials')],
+    ['users', 'entries', 'posts', 'services', 'socials'],
 )
 def test_get_url(module: str) -> None:
     UUID = 'b47b2559-646e-487a-b377-370d15f27835'
     assert get_url(module, uuid=UUID) == f'/{VERSION}{module}/{UUID}'
 
 
-@pytest.mark.parametrize('image_type', [('posts'), ('profiles')])
+@pytest.mark.parametrize('image_type', ['posts', 'profiles'])
 def test_get_image(image_type: str) -> None:
     img_path = config.ROOT_DIR / config.UPLOAD_DIR / ImageType(image_type).value
     with tempfile.NamedTemporaryFile(suffix='.jpg', dir=img_path) as temp_file:
@@ -60,13 +60,13 @@ def test_get_image(image_type: str) -> None:
         get_image('test', path=ImageType(image_type))
 
 
-@pytest.mark.parametrize('image_factory', [('posts'), ('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['posts', 'profiles'], indirect=True)
 async def test_save_image(image_factory: ImageFactory[None]) -> None:
     async for _, img_path, _ in await image_factory(instance=None):
         assert Path.exists(img_path)
 
 
-@pytest.mark.parametrize('image_factory', [('posts'), ('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['posts', 'profiles'], indirect=True)
 async def test_save_image_too_large(image_factory: ImageFactory[None]) -> None:
     with pytest.raises(HTTPException):
         async for _ in await image_factory(size=config.IMAGE_SIZE + 1, instance=None):

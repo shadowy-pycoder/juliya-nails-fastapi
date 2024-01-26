@@ -49,6 +49,18 @@ VERIFIED_USER = {
     'active': True,
     'admin': False,
 }
+
+SECOND_VERIFIED_USER = {
+    'uuid': UUID('aa61807e-2490-4c09-ba09-4f4754840e5c'),
+    'email': 'john@john.com',
+    'password': 'john',
+    'hashed_password': bcrypt.hash('john'),
+    'username': 'john',
+    'confirmed': True,
+    'confirmed_on': datetime.now(tz=timezone.utc),
+    'active': True,
+    'admin': False,
+}
 UNVERIFIED_USER = {
     'uuid': UUID('764a3113-7d87-4345-8c91-d68e2464b060'),
     'email': 'bob@bob.com',
@@ -107,16 +119,52 @@ SERVICES = [
     {'uuid': UUID('e9b13e10-ad34-4716-a46e-c4f989844fe7'), 'name': 'Service 5', 'duration': 120},
 ]
 
+POSTS = [
+    {
+        'uuid': UUID('e88dcfad-54d8-4f09-949c-ed529dd26dd1'),
+        'title': 'title 1',
+        'image': 'image1.jpg',
+        'content': 'content 1',
+        'author_id': ADMIN_USER['uuid'],
+    },
+    {
+        'uuid': UUID('5e3c1308-b798-42ca-a383-2e4cc8f0cf8a'),
+        'title': 'title 2',
+        'image': 'image2.jpg',
+        'content': 'content 2',
+        'author_id': ADMIN_USER['uuid'],
+    },
+    {
+        'uuid': UUID('d61d71b3-d4cc-4f29-994d-072b06f26a17'),
+        'title': 'title 3',
+        'image': 'image3.jpg',
+        'content': 'content 3',
+        'author_id': ADMIN_USER['uuid'],
+    },
+    {
+        'uuid': UUID('752ff446-8190-4ed6-9c5d-ff23a5f0fb7c'),
+        'title': 'title 4',
+        'image': 'image4.jpg',
+        'content': 'content 4',
+        'author_id': ADMIN_USER['uuid'],
+    },
+    {
+        'uuid': UUID('3b7959eb-d397-4242-895d-8b50891ff32a'),
+        'title': 'title 5',
+        'image': 'image5.jpg',
+        'content': 'content 5',
+        'author_id': ADMIN_USER['uuid'],
+    },
+]
+
 T = TypeVar('T', User, Post, None)
 EntryFactory: TypeAlias = Callable[
-    [list[User], AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Entry], None]]
-]
-PostFactory: TypeAlias = Callable[
-    [User, AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Post], None]]
+    [User, AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Entry], None]]
 ]
 ImageFactory: TypeAlias = Callable[
     ..., Coroutine[Any, Any, AsyncGenerator[tuple[str, Path, T], None]]
 ]
+EntryList = tuple[dict[str, Any], dict[str, Any], dict[str, Any], datetime]
 
 
 def parse_payload(payload: list[Any]) -> str | None:
@@ -169,22 +217,21 @@ def create_temp_image(*, fmt: str = 'png', size: int = config.IMAGE_SIZE) -> io.
 
 
 async def create_entries(
-    users: list[User], count: int, async_session: AsyncSession
+    user_id: UUID, count: int, async_session: AsyncSession
 ) -> AsyncGenerator[list[Entry], None]:
     entries = []
     services = [Service(**data) for data in SERVICES]
-    for user in users:
-        for _ in range(count):
-            entry_date = date.today() + timedelta(days=randint(0, 7))
-            entry_time = time(hour=randint(0, 23), minute=randint(0, 59))
-            entries.append(
-                Entry(
-                    date=entry_date,
-                    time=entry_time,
-                    services=services[randint(0, len(services) - 1) :],
-                    user_id=user.uuid,
-                )
+    for _ in range(count):
+        entry_date = date.today() + timedelta(days=randint(14, 28))
+        entry_time = time(hour=randint(0, 23), minute=randint(0, 59))
+        entries.append(
+            Entry(
+                date=entry_date,
+                time=entry_time,
+                services=services[randint(0, len(services) - 1) :],
+                user_id=user_id,
             )
+        )
     async_session.add_all(entries)
     async_session.add_all(services)
     await async_session.commit()
@@ -193,23 +240,6 @@ async def create_entries(
         await async_session.delete(entry)
     for service in services:
         await async_session.delete(service)
-    await async_session.commit()
-
-
-async def create_posts(
-    user_id: UUID, count: int, async_session: AsyncSession
-) -> AsyncGenerator[list[Post], None]:
-    posts = []
-    for i in range(count):
-        title = f'Post {i} by {user_id}'
-        image = f'Image{i}.jpg'
-        content = f'Content {i}'
-        posts.append(Post(title=title, image=image, content=content, author_id=user_id))
-    async_session.add_all(posts)
-    await async_session.commit()
-    yield posts
-    for post in posts:
-        await async_session.delete(post)
     await async_session.commit()
 
 

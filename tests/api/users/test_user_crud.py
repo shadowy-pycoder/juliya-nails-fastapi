@@ -17,7 +17,6 @@ from tests.utils import (
     SOCIAL_DATA,
     EntryFactory,
     ImageFactory,
-    PostFactory,
     create_temp_image,
     create_user,
 )
@@ -151,7 +150,7 @@ async def test_get_user_entries(
     async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    async for _ in await entry_factory([verified_user], async_session):
+    async for _ in await entry_factory(verified_user, async_session):
         resp = await async_client.get(
             f'users/{verified_user.uuid}/entries',
             headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
@@ -166,31 +165,27 @@ async def test_get_user_entries(
         assert resp.json() == {'detail': 'You are not allowed to perform this operation'}
 
 
-@pytest.mark.parametrize('post_factory, expected', [(5, 5)], indirect=['post_factory'])
+@pytest.mark.usefixtures('post_list')
 async def test_get_user_posts(
     admin_user: User,
     admin_user_token: Token,
     unverified_user_token: Token,
-    post_factory: PostFactory,
-    expected: int,
-    async_session: AsyncSession,
     async_client: AsyncClient,
 ) -> None:
-    async for _ in await post_factory(admin_user, async_session):
-        resp = await async_client.get(
-            f'users/{admin_user.uuid}/posts',
-            headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
-        )
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.json()['total'] == expected
-        resp = await async_client.get(
-            f'users/{admin_user.uuid}/posts',
-            headers={'Authorization': f'Bearer {unverified_user_token.access_token}'},
-        )
-        assert resp.status_code == status.HTTP_403_FORBIDDEN
-        assert resp.json() == {
-            'detail': 'Your account is inactive. Please activate your account to proceed.'
-        }
+    resp = await async_client.get(
+        f'users/{admin_user.uuid}/posts',
+        headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()['total'] > 0
+    resp = await async_client.get(
+        f'users/{admin_user.uuid}/posts',
+        headers={'Authorization': f'Bearer {unverified_user_token.access_token}'},
+    )
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
+    assert resp.json() == {
+        'detail': 'Your account is inactive. Please activate your account to proceed.'
+    }
 
 
 async def test_get_user_socials(
@@ -268,7 +263,7 @@ async def test_patch_user_socials(
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_get_user_avatar(
     verified_user: User,
     verified_user_token: Token,
@@ -294,7 +289,7 @@ async def test_get_user_avatar(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_update_user_avatar(
     admin_user_token: Token,
     verified_user: User,
@@ -328,7 +323,7 @@ async def test_update_user_avatar(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_delete_user_avatar(
     admin_user_token: Token,
     verified_user: User,

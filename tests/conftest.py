@@ -1,5 +1,6 @@
 import asyncio
 from asyncio import AbstractEventLoop
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator
 
@@ -27,16 +28,17 @@ from tests.utils import (
     ADMIN_USER,
     BASE_URL,
     INACTIVE_USER,
+    POSTS,
+    SECOND_VERIFIED_USER,
     SERVICES,
     UNVERIFIED_USER,
     VERIFIED_USER,
     EntryFactory,
+    EntryList,
     ImageFactory,
-    PostFactory,
     T,
     create_entries,
     create_image,
-    create_posts,
     create_token,
     create_user,
     delete_user,
@@ -133,6 +135,13 @@ async def verified_user(async_session: AsyncSession) -> AsyncGenerator[User, Non
 
 
 @pytest.fixture(scope='function')
+async def second_verified_user(async_session: AsyncSession) -> AsyncGenerator[User, None]:
+    user = await create_user(SECOND_VERIFIED_USER, async_session)
+    yield user
+    await delete_user(user, async_session)
+
+
+@pytest.fixture(scope='function')
 async def unverified_user(async_session: AsyncSession) -> AsyncGenerator[User, None]:
     user = await create_user(UNVERIFIED_USER, async_session)
     yield user
@@ -154,6 +163,13 @@ async def admin_user_token(admin_user: User, async_client: AsyncClient) -> Token
 @pytest.fixture(scope='function')
 async def verified_user_token(verified_user: User, async_client: AsyncClient) -> Token:
     return await create_token(verified_user, VERIFIED_USER, async_client)
+
+
+@pytest.fixture(scope='function')
+async def second_verified_user_token(
+    second_verified_user: User, async_client: AsyncClient
+) -> Token:
+    return await create_token(second_verified_user, SECOND_VERIFIED_USER, async_client)
 
 
 @pytest.fixture(scope='function')
@@ -180,20 +196,23 @@ def load_truncate() -> Generator[None, None, None]:
 
 @pytest.fixture(scope='function')
 def entry_factory(request: FixtureRequest) -> EntryFactory:
-    async def inner(
-        users: list[User], async_session: AsyncSession
-    ) -> AsyncGenerator[list[Entry], None]:
-        return create_entries(users, request.param, async_session)
+    async def inner(user: User, async_session: AsyncSession) -> AsyncGenerator[list[Entry], None]:
+        return create_entries(user.uuid, request.param, async_session)
 
     return inner
 
 
 @pytest.fixture(scope='function')
-def post_factory(request: FixtureRequest) -> PostFactory:
-    async def inner(user: User, async_session: AsyncSession) -> AsyncGenerator[list[Post], None]:
-        return create_posts(user.uuid, request.param, async_session)
-
-    return inner
+async def post_list(
+    admin_user: User, async_session: AsyncSession
+) -> AsyncGenerator[list[Post], None]:
+    posts = [Post(**data) for data in POSTS]
+    async_session.add_all(posts)
+    await async_session.commit()
+    yield posts
+    for post in posts:
+        await async_session.delete(post)
+    await async_session.commit()
 
 
 @pytest.fixture(scope='function')
@@ -205,6 +224,32 @@ async def service_list(async_session: AsyncSession) -> AsyncGenerator[list[Servi
     for service in services:
         await async_session.delete(service)
     await async_session.commit()
+
+
+@pytest.fixture(scope='function')
+async def entry_list(service_list: list[Service], request: FixtureRequest) -> EntryList:
+    services_uuid = [str(service.uuid) for service in service_list]
+    total_duration = sum(service.duration for service in service_list)
+    offset = total_duration - request.param['offset']
+    date = datetime.now() + timedelta(days=request.param['days'])
+    date_prev = date - timedelta(minutes=offset)
+    date_next = date + timedelta(minutes=offset)
+    data = {
+        'date': date.date().isoformat(),
+        'time': date.time().isoformat(),
+        'services': services_uuid,
+    }
+    data_prev = {
+        'date': date_prev.date().isoformat(),
+        'time': date_prev.time().isoformat(),
+        'services': services_uuid,
+    }
+    data_next = {
+        'date': date_next.date().isoformat(),
+        'time': date_next.time().isoformat(),
+        'services': services_uuid,
+    }
+    return data, data_prev, data_next, date
 
 
 @pytest.fixture(scope='function')

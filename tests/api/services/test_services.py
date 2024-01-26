@@ -70,7 +70,7 @@ async def test_get_service_entries(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for _ in await entry_factory([admin_user], async_session):
+    async for _ in await entry_factory(admin_user, async_session):
         resp = await async_client.get(
             f'services/{SERVICES[-1]["uuid"]}/entries',
             headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
@@ -112,7 +112,7 @@ async def test_update_one(
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('entry_factory', [(5)], indirect=True)
+@pytest.mark.parametrize('entry_factory', [5], indirect=True)
 async def test_patch_one(
     admin_user: User,
     admin_user_token: Token,
@@ -121,7 +121,7 @@ async def test_patch_one(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for _ in await entry_factory([admin_user], async_session):
+    async for _ in await entry_factory(admin_user, async_session):
         service = (
             await async_session.execute(sa.select(Service).filter_by(uuid=SERVICES[-1]['uuid']))
         ).scalar_one()

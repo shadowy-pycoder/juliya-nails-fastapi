@@ -26,7 +26,7 @@ async def test_get_all(
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_get_one(
     admin_user_token: Token,
     verified_user: User,
@@ -50,7 +50,7 @@ async def test_get_one(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_update_one(
     admin_user_token: Token,
     verified_user: User,
@@ -79,7 +79,7 @@ async def test_update_one(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_patch_one(
     admin_user_token: Token,
     verified_user: User,
@@ -112,7 +112,7 @@ async def test_patch_one(
         assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.parametrize('image_factory', [('profiles')], indirect=True)
+@pytest.mark.parametrize('image_factory', ['profiles'], indirect=True)
 async def test_delete_one(
     admin_user_token: Token,
     verified_user: User,
