@@ -50,8 +50,13 @@ async def validate_entry(
 ) -> Entry:
     entry = await repo.find_by_uuid(uuid, detail='Entry does not exist')
     if not user.admin:
-        if entry.user != user or entry.completed:
+        if entry.user != user:
             raise HTTP_403_FORBIDDEN
+        elif entry.completed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='You cannot edit a completed entry',
+            )
     return entry
 
 

@@ -231,7 +231,7 @@ async def entry_list(service_list: list[Service], request: FixtureRequest) -> En
     services_uuid = [str(service.uuid) for service in service_list]
     total_duration = sum(service.duration for service in service_list)
     offset = total_duration - request.param['offset']
-    date = datetime.now() + timedelta(days=request.param['days'])
+    date = datetime.now().replace(hour=12) + timedelta(days=request.param['days'])
     date_prev = date - timedelta(minutes=offset)
     date_next = date + timedelta(minutes=offset)
     data = {

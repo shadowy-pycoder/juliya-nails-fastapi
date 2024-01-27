@@ -6,3 +6,4 @@ __pycache__/
 **/static/images/posts/*
 **/static/images/profiles/*
 logging.yaml
+.coverage
