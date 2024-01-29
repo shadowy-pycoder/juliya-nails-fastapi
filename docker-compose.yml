@@ -1,0 +1,72 @@
+version: "3.8"
+services:
+  api:
+    image: juliyanails-prod
+    container_name: juliyanails-prod
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - image_data:/app/backend/src/static/images
+    ports:
+      - 8000:8000
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    entrypoint: ["bash", "-c", "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"]
+    healthcheck:
+      test: ["CMD-SHELL", "bash", "-c", "curl", "-f", "https://api/up"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 5s
+    networks:
+      - juliyanails_network
+    depends_on:
+      - redis
+      - db
+  redis:
+    image: redis:7.2.4-alpine3.19
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/redis.conf:/conf/redis.conf
+    entrypoint: redis-server /conf/redis.conf
+    env_file:
+      - ./backend/.env
+    networks:
+      - juliyanails_network
+  db:
+    image: postgres:15
+    container_name: postgres
+    env_file:
+      - ./backend/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    restart: unless-stopped
+    networks:
+      - juliyanails_network
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    depends_on:
+      - db
+    networks:
+      - juliyanails_network
+    
+volumes:
+  postgres_data:
+  image_data:
+  pgadmin_data:
+networks:
+  juliyanails_network:
+
