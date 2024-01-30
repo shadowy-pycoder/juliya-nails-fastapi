@@ -46,7 +46,6 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - ./scripts/multiple_databases.sh:/docker-entrypoint-initdb.d/multiple_databases.sh
       - postgres_data:/var/lib/postgresql/data/
     restart: unless-stopped
     networks:
