@@ -1,12 +1,12 @@
 import time
 from typing import Awaitable, Callable
 
-import redis.asyncio as aioredis
 from cryptography.fernet import Fernet
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
+import redis.asyncio as aioredis
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.core.config import config

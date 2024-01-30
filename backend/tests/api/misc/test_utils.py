@@ -6,7 +6,6 @@ from typing import Any
 
 import pytest
 from fastapi import HTTPException
-
 from src.core.config import config
 from src.utils import (
     MESSAGE_PREFIX,

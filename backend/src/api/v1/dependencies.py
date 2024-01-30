@@ -1,8 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from fastapi_mail.email_utils import DefaultChecker
 from pydantic import UUID4
-from redis.asyncio import Redis
 
+from redis.asyncio import Redis
 from src.models.entries import Entry
 from src.models.users import User
 from src.repositories.auth import AuthRepository, EmailRequest, ResetRequest, oauth2_scheme

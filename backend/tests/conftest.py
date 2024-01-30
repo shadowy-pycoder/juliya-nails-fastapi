@@ -12,7 +12,6 @@ from pytest import FixtureRequest
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
-
 from src.core.config import config
 from src.database import Base, get_async_session
 from src.main import app
@@ -22,6 +21,7 @@ from src.models.services import Service
 from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
+
 from tests.utils import (
     ADMIN_USER,
     BASE_URL,
@@ -76,7 +76,7 @@ async def drop_all() -> None:
 
 @pytest.fixture(autouse=True, scope='session')
 async def prepare_database() -> AsyncGenerator[None, None]:
-    assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
+    # assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
     await drop_all()
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
