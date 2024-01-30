@@ -7,7 +7,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - image_data:/app/backend/src/static/images
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+      - image_data:/app/src/static/images
     ports:
       - 8000:8000
     env_file:
@@ -44,6 +46,7 @@ services:
     env_file:
       - ./backend/.env
     volumes:
+      - ./scripts/multiple_databases.sh:/docker-entrypoint-initdb.d/multiple_databases.sh
       - postgres_data:/var/lib/postgresql/data/
     restart: unless-stopped
     networks:
