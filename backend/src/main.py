@@ -8,13 +8,14 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_pagination import add_pagination
-from redis.asyncio import Redis
 from sqlalchemy import text
 
+from redis.asyncio import Redis
 from src.api import router_v1
 from src.core.config import config
 from src.database import AsyncSession, get_async_session
 from src.repositories.redis import RateLimitMiddleware, get_redis
+
 
 app = FastAPI(
     title=config.APP_NAME,

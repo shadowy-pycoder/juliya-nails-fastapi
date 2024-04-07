@@ -5,6 +5,7 @@ from typing import Annotated, TypeAlias
 from fastapi_filter.contrib.sqlalchemy import Filter
 from pydantic import UUID4, AfterValidator
 
+
 UUIDstr: TypeAlias = UUID4 | Annotated[str, AfterValidator(lambda x: uuid.UUID(x, version=4))]
 
 

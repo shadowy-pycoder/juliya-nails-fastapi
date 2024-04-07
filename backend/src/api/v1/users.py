@@ -38,6 +38,7 @@ from src.schemas.users import (
     UserUpdatePartial,
 )
 
+
 router = APIRouter(
     prefix='/v1/users',
     tags=['users'],
@@ -294,9 +295,7 @@ async def delete_one(
 ) -> None:
     user = await repo.find_by_uuid(uuid, detail='User does not exist')
     if user.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail='Attempt to delete admin user'
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Attempt to delete admin user')
     logger.info(f'[delete user][admin]: {user}')
     await repo.delete(user)
 

@@ -14,6 +14,7 @@ from src.schemas.socials import (
     SocialRead,
 )
 
+
 router = APIRouter(
     prefix='/v1/socials',
     tags=['socials'],

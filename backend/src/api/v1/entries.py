@@ -27,6 +27,7 @@ from src.schemas.entries import (
     EntryUpdatePartial,
 )
 
+
 router = APIRouter(
     prefix='/v1/entries',
     tags=['entries'],

@@ -15,6 +15,7 @@ from src.schemas.users import (
     UserUpdatePartial,
 )
 
+
 if TYPE_CHECKING:
     from src.repositories.auth import AuthRepository
 

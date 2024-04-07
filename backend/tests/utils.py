@@ -12,8 +12,6 @@ from httpx import AsyncClient
 from passlib.hash import bcrypt
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.datastructures import Headers
-
 from src.core.config import config
 from src.models.entries import Entry
 from src.models.posts import Post
@@ -22,6 +20,8 @@ from src.models.socials import SocialMedia
 from src.models.users import User
 from src.schemas.auth import Token
 from src.utils import ImageType, save_image
+from starlette.datastructures import Headers
+
 
 VERSION = 'api/v1/'
 
@@ -158,12 +158,8 @@ POSTS = [
 ]
 
 T = TypeVar('T', User, Post, None)
-EntryFactory: TypeAlias = Callable[
-    [User, AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Entry], None]]
-]
-ImageFactory: TypeAlias = Callable[
-    ..., Coroutine[Any, Any, AsyncGenerator[tuple[str, Path, T], None]]
-]
+EntryFactory: TypeAlias = Callable[[User, AsyncSession], Coroutine[Any, Any, AsyncGenerator[list[Entry], None]]]
+ImageFactory: TypeAlias = Callable[..., Coroutine[Any, Any, AsyncGenerator[tuple[str, Path, T], None]]]
 EntryList = tuple[dict[str, Any], dict[str, Any], dict[str, Any], datetime]
 
 
@@ -216,9 +212,7 @@ def create_temp_image(*, fmt: str = 'png', size: int = config.IMAGE_SIZE) -> io.
     return file
 
 
-async def create_entries(
-    user_id: UUID, count: int, async_session: AsyncSession
-) -> AsyncGenerator[list[Entry], None]:
+async def create_entries(user_id: UUID, count: int, async_session: AsyncSession) -> AsyncGenerator[list[Entry], None]:
     entries = []
     services = [Service(**data) for data in SERVICES]
     for _ in range(count):
@@ -258,9 +252,7 @@ async def create_image(
     img_path = config.ROOT_DIR / config.UPLOAD_DIR / ImageType(image_type).value / filename
     if async_session is not None:
         if isinstance(instance, User):
-            social = (
-                await async_session.execute(sa.select(SocialMedia).filter_by(user_id=instance.uuid))
-            ).scalar_one()
+            social = (await async_session.execute(sa.select(SocialMedia).filter_by(user_id=instance.uuid))).scalar_one()
             social.avatar = filename
             async_session.add(instance)
             await async_session.commit()

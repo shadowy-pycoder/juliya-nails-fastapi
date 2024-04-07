@@ -13,6 +13,7 @@ from src.schemas.auth import EmailRequest, ResetRequest, Token, VerifyUserReques
 from src.schemas.users import UserCreate, UserRead
 from src.utils import AccountAction
 
+
 router = APIRouter(
     prefix='/v1/auth',
     tags=['auth'],
@@ -94,11 +95,7 @@ async def resend_email_change_confirmation(
     '/activate',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {
-            'description': 'The confirmation token is invalid or has expired.'
-        }
-    },
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'The confirmation token is invalid or has expired.'}},
 )
 async def activate_account(
     data: VerifyUserRequest,
@@ -125,11 +122,7 @@ async def activate_account(
     '/confirm-change',
     status_code=status.HTTP_200_OK,
     response_class=JSONResponse,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {
-            'description': 'The confirmation token is invalid or has expired.'
-        }
-    },
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'The confirmation token is invalid or has expired.'}},
 )
 async def confirm_email_change(
     data: VerifyUserRequest,
@@ -186,11 +179,7 @@ async def forgot_password(
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(check_disposable)],
     response_class=JSONResponse,
-    responses={
-        status.HTTP_400_BAD_REQUEST: {
-            'description': 'The confirmation token is invalid or has expired.'
-        }
-    },
+    responses={status.HTTP_400_BAD_REQUEST: {'description': 'The confirmation token is invalid or has expired.'}},
 )
 async def reset_password(
     user_data: ResetRequest,

@@ -17,9 +17,7 @@ class Post(BaseDBModel):
     author_id: so.Mapped[UUID] = so.mapped_column(
         pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
     )
-    author: so.Mapped['User'] = so.relationship(
-        back_populates='posts', lazy='joined', innerjoin=True
-    )
+    author: so.Mapped['User'] = so.relationship(back_populates='posts', lazy='joined', innerjoin=True)
 
     def __repr__(self) -> str:
         return f'Post({self.uuid}, {self.title}, {self.author})'

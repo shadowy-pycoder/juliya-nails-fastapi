@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from fastapi import status
 from freezegun.api import FrozenDateTimeFactory
 from httpx import AsyncClient
-
 from src.core.config import config, fm
 from src.models.users import User
 from tests.utils import ANONYMOUS_USER, parse_payload
@@ -30,9 +29,7 @@ async def test_reset_password_admin_user(admin_user: User, async_client: AsyncCl
     assert resp.json() == {'detail': 'The confirmation link is invalid or has expired.'}
 
 
-async def test_reset_password_unverified_user(
-    unverified_user: User, async_client: AsyncClient
-) -> None:
+async def test_reset_password_unverified_user(unverified_user: User, async_client: AsyncClient) -> None:
     data = {
         'token': 'token',
         'email': unverified_user.email,
@@ -55,9 +52,7 @@ async def test_reset_password_inactive_user(inactive_user: User, async_client: A
     }
     resp = await async_client.put('auth/reset-password', json=data)
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
-    assert resp.json() == {
-        'detail': 'Your account is inactive. Please activate your account to proceed.'
-    }
+    assert resp.json() == {'detail': 'Your account is inactive. Please activate your account to proceed.'}
 
 
 async def test_reset_password_anonymous_user(async_client: AsyncClient) -> None:

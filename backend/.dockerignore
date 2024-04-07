@@ -1,6 +1,10 @@
 # Git
 .git
+*/.git
+*/*/.git
 .gitignore
+*/.gitignore
+*/*/.gitignore
 
 # CI
 .codeclimate.yml
@@ -97,3 +101,5 @@ venv/
 .env
 .coverage
 *.env*
+!.env.example
+.dockerignore

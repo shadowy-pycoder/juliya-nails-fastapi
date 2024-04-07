@@ -25,9 +25,7 @@ from tests.utils import VERSION, ImageFactory
         ('foo#BarTest', pytest.raises(ValueError, match=f'{MESSAGE_PREFIX}1 digit')),
         (
             '123456789',
-            pytest.raises(
-                ValueError, match=f'{MESSAGE_PREFIX}1 uppercase, 1 lowercase, 1 special character'
-            ),
+            pytest.raises(ValueError, match=f'{MESSAGE_PREFIX}1 uppercase, 1 lowercase, 1 special character'),
         ),
         ('foobar3#', pytest.raises(ValueError, match=f'{MESSAGE_PREFIX}1 uppercase')),
         ('BAR#$123', pytest.raises(ValueError, match=f'{MESSAGE_PREFIX}1 lowercase')),

@@ -7,6 +7,7 @@ from .v1.services import router as services_router_v1
 from .v1.socials import router as socials_router_v1
 from .v1.users import router as users_router_v1
 
+
 router_v1 = APIRouter()
 router_v1.include_router(auth_router_v1)
 router_v1.include_router(entries_router_v1)

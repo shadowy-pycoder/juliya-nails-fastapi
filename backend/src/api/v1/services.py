@@ -17,6 +17,7 @@ from src.schemas.services import (
     ServiceRead,
 )
 
+
 router = APIRouter(
     prefix='/v1/services',
     tags=['services'],

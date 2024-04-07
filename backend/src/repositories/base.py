@@ -12,6 +12,7 @@ from sqlalchemy.orm import QueryableAttribute, WriteOnlyCollection
 from src.database import get_async_session
 from src.models.base import BaseDBModel
 
+
 BaseModelType = TypeVar('BaseModelType', bound=BaseDBModel)
 BaseSchemaType = TypeVar('BaseSchemaType', bound=BaseModel)
 BaseSchemaCreate = TypeVar('BaseSchemaCreate', bound=BaseModel)
@@ -83,10 +84,7 @@ class BaseRepository(
     async def update(
         self,
         instance: BaseModelType,
-        values: BaseSchemaUpdate
-        | BaseSchemaUpdatePartial
-        | BaseSchemaAdminUpdate
-        | BaseSchemaAdminUpdatePartial,
+        values: BaseSchemaUpdate | BaseSchemaUpdatePartial | BaseSchemaAdminUpdate | BaseSchemaAdminUpdatePartial,
         exclude_unset: bool = False,
         exclude_none: bool = False,
         exclude_defaults: bool = False,

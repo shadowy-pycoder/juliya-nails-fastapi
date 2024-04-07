@@ -3,7 +3,6 @@ import sqlalchemy as sa
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.models.services import Service
 from src.models.users import User
 from src.schemas.auth import Token
@@ -40,9 +39,7 @@ async def test_get_all(
     admin_user_token: Token,
     async_client: AsyncClient,
 ) -> None:
-    resp = await async_client.get(
-        'services', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-    )
+    resp = await async_client.get('services', headers={'Authorization': f'Bearer {admin_user_token.access_token}'})
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()['total'] > 0
 
@@ -122,9 +119,7 @@ async def test_patch_one(
     async_session: AsyncSession,
 ) -> None:
     async for _ in await entry_factory(admin_user, async_session):
-        service = (
-            await async_session.execute(sa.select(Service).filter_by(uuid=SERVICES[-1]['uuid']))
-        ).scalar_one()
+        service = (await async_session.execute(sa.select(Service).filter_by(uuid=SERVICES[-1]['uuid']))).scalar_one()
         old_name = service.name
         old_entries = await async_session.scalars(service.entries.select())
         data = {'duration': 15}

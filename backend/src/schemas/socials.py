@@ -21,15 +21,9 @@ from src.utils import PATTERNS, get_url
 
 class BaseSocial(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    first_name: Annotated[
-        str | None, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])
-    ] = None
-    last_name: Annotated[
-        str | None, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])
-    ] = None
-    phone_number: Annotated[
-        str | None, Field(max_length=50, pattern=PATTERNS['phone_number'])
-    ] = None
+    first_name: Annotated[str | None, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])] = None
+    last_name: Annotated[str | None, Field(min_length=2, max_length=50, pattern=PATTERNS['name'])] = None
+    phone_number: Annotated[str | None, Field(max_length=50, pattern=PATTERNS['phone_number'])] = None
     viber: Annotated[str | None, Field(max_length=50, pattern=PATTERNS['phone_number'])] = None
     whatsapp: Annotated[str | None, Field(max_length=50, pattern=PATTERNS['phone_number'])] = None
     instagram: Annotated[str | None, Field(max_length=255, pattern=PATTERNS['instagram'])] = None

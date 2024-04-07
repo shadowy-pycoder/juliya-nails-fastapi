@@ -19,6 +19,7 @@ from src.schemas.posts import (
     PostRead,
 )
 
+
 router = APIRouter(
     prefix='/v1/posts',
     tags=['posts'],

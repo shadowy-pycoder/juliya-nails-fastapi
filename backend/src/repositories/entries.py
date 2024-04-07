@@ -20,9 +20,8 @@ from src.schemas.entries import (
 )
 from src.utils import get_url
 
-EntrySchema: TypeAlias = (
-    EntryUpdate | EntryUpdatePartial | EntryAdminUpdate | EntryAdminUpdatePartial
-)
+
+EntrySchema: TypeAlias = EntryUpdate | EntryUpdatePartial | EntryAdminUpdate | EntryAdminUpdatePartial
 
 
 class EntryRepository(
@@ -46,9 +45,7 @@ class EntryRepository(
         if context == 'update':
             filters.append(Entry.uuid != instance.uuid)
         prev_entry = await self.session.scalar(
-            sa.select(Entry)
-            .filter(sa.and_(*filters))
-            .order_by(Entry.date.desc(), Entry.time.desc())
+            sa.select(Entry).filter(sa.and_(*filters)).order_by(Entry.date.desc(), Entry.time.desc())
         )
         if prev_entry and prev_entry.ending_time > instance.timestamp:
             return False
@@ -63,9 +60,7 @@ class EntryRepository(
 
     async def create(self, values: EntryCreate, **kwargs: Any) -> Entry:
         new_instance = self.model(**values.model_dump(exclude={'services'}), **kwargs)
-        services = await self.session.scalars(
-            sa.select(Service).filter(Service.uuid.in_(values.services))
-        )
+        services = await self.session.scalars(sa.select(Service).filter(Service.uuid.in_(values.services)))
         new_instance.services.extend(services)
         if not await self.can_create_entry(new_instance):
             url = get_url('entries', 'get_by_date', date=values.date.strftime('%Y-%m-%d'))
@@ -95,9 +90,7 @@ class EntryRepository(
             )
         )
         if values.services is not None:
-            services = await self.session.scalars(
-                sa.select(Service).filter(Service.uuid.in_(values.services))
-            )
+            services = await self.session.scalars(sa.select(Service).filter(Service.uuid.in_(values.services)))
             entry.services.clear()
             entry.services.extend(services)
         if not await self.can_create_entry(entry, context='update'):

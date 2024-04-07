@@ -25,5 +25,5 @@ class DBConfig(BaseSettings):
             password=info.data.get('POSTGRES_PASSWORD'),
             host=info.data.get('POSTGRES_HOST'),
             path=info.data.get('POSTGRES_DB'),
-            port=info.data.get("POSTGRES_PORT"),
+            port=info.data.get('POSTGRES_PORT'),
         ).unicode_string()

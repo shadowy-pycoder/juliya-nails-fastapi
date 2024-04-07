@@ -5,7 +5,6 @@ import sqlalchemy as sa
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.core.config import config
 from src.models.posts import Post
 from src.models.users import User
@@ -51,9 +50,7 @@ async def test_get_all(
     admin_user_token: Token,
     async_client: AsyncClient,
 ) -> None:
-    resp = await async_client.get(
-        'posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-    )
+    resp = await async_client.get('posts', headers={'Authorization': f'Bearer {admin_user_token.access_token}'})
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()['total'] > 0
 
@@ -88,9 +85,7 @@ async def test_get_post_image(
     async_client: AsyncClient,
 ) -> None:
     data = {'title': 'test_title', 'content': 'test_content', 'author_id': admin_user.uuid}
-    async for _, img_path, post in await image_factory(
-        instance=Post(**data), async_session=async_session
-    ):
+    async for _, img_path, post in await image_factory(instance=Post(**data), async_session=async_session):
         resp = await async_client.get(
             f'posts/{post.uuid}/image',
             headers={'Authorization': f'Bearer {admin_user_token.access_token}'},
@@ -183,9 +178,7 @@ async def test_delete_one(
     async_session: AsyncSession,
 ) -> None:
     data = {'title': 'test_title', 'content': 'test_content', 'author_id': admin_user.uuid}
-    async for _, img_path, post in await image_factory(
-        instance=Post(**data), async_session=async_session
-    ):
+    async for _, img_path, post in await image_factory(instance=Post(**data), async_session=async_session):
         resp = await async_client.delete(
             f'posts/{post.uuid}',
             headers={'Authorization': f'Bearer {admin_user_token.access_token}'},

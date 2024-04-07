@@ -6,7 +6,6 @@ from fastapi import status
 from httpx import AsyncClient
 from pytest import FixtureRequest
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.models.entries import Entry
 from src.models.services import Service
 from src.models.users import User
@@ -109,9 +108,7 @@ async def test_get_all(
     async_session: AsyncSession,
 ) -> None:
     async for _ in await entry_factory(admin_user, async_session):
-        resp = await async_client.get(
-            'entries', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-        )
+        resp = await async_client.get('entries', headers={'Authorization': f'Bearer {admin_user_token.access_token}'})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.json()['total'] > 0
         resp = await async_client.get(
@@ -265,9 +262,7 @@ async def test_update_one_conflict(
         headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
     )
     assert resp.status_code == status.HTTP_201_CREATED
-    date = datetime.now().replace(hour=12) + timedelta(
-        days=request.node.callspec.params['entry_list']['days'], hours=1
-    )
+    date = datetime.now().replace(hour=12) + timedelta(days=request.node.callspec.params['entry_list']['days'], hours=1)
     services_uuid = [str(service.uuid) for service in service_list]
     data = {
         'date': date.date().isoformat(),

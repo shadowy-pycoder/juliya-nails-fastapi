@@ -76,7 +76,7 @@ async def drop_all() -> None:
 
 @pytest.fixture(autouse=True, scope='session')
 async def prepare_database() -> AsyncGenerator[None, None]:
-    # assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
+    assert Path.exists(config.ROOT_DIR.parent / '.test.env'), 'No testing enviroment'
     await drop_all()
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -16,9 +16,8 @@ from src.schemas.posts import (
 )
 from src.utils import ImageType, delete_image, get_image, save_image
 
-PostUpdateSchema: TypeAlias = (
-    PostUpdate | PostUpdatePartial | PostAdminUpdate | PostAdminUpdatePartial
-)
+
+PostUpdateSchema: TypeAlias = PostUpdate | PostUpdatePartial | PostAdminUpdate | PostAdminUpdatePartial
 
 
 class PostRepository(

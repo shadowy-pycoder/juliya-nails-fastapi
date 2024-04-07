@@ -5,6 +5,7 @@ import sqlalchemy.orm as so
 
 from src.models.base import BaseDBModel, association_table
 
+
 if TYPE_CHECKING:
     from src.models.entries import Entry
 

@@ -7,6 +7,7 @@ from src.core.config import config, fm
 from src.models.users import User
 from src.utils import AccountAction
 
+
 APP_NAME = config.APP_NAME
 
 

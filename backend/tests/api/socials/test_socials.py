@@ -2,7 +2,6 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.models.users import User
 from src.schemas.auth import Token
 from src.schemas.socials import SocialRead
@@ -15,14 +14,10 @@ async def test_get_all(
     verified_user_token: Token,
     async_client: AsyncClient,
 ) -> None:
-    resp = await async_client.get(
-        'socials', headers={'Authorization': f'Bearer {admin_user_token.access_token}'}
-    )
+    resp = await async_client.get('socials', headers={'Authorization': f'Bearer {admin_user_token.access_token}'})
     assert resp.status_code == status.HTTP_200_OK
     assert len(resp.json()['items']) > 0
-    resp = await async_client.get(
-        'socials', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
-    )
+    resp = await async_client.get('socials', headers={'Authorization': f'Bearer {verified_user_token.access_token}'})
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 

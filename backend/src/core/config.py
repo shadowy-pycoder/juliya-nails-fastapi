@@ -5,9 +5,7 @@ from .conf import AuthConfig, DBConfig, EmailConfig, RedisConfig, ServerConfig
 
 
 class Config(AuthConfig, DBConfig, EmailConfig, RedisConfig, ServerConfig):
-    model_config = SettingsConfigDict(
-        case_sensitive=True, env_file='.env', env_file_encoding='utf-8'
-    )
+    model_config = SettingsConfigDict(case_sensitive=True, env_file='.env', env_file_encoding='utf-8')
 
 
 config = Config()

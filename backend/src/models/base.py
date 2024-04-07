@@ -9,13 +9,12 @@ from sqlalchemy.sql import func
 
 from src.database import Base
 
+
 association_table = sa.Table(
     'association_table',
     Base.metadata,
     sa.Column('entry_id', pg_UUID(as_uuid=True), sa.ForeignKey('entry.uuid', ondelete='CASCADE')),
-    sa.Column(
-        'service_id', pg_UUID(as_uuid=True), sa.ForeignKey('service.uuid', ondelete='SET NULL')
-    ),
+    sa.Column('service_id', pg_UUID(as_uuid=True), sa.ForeignKey('service.uuid', ondelete='SET NULL')),
 )
 
 
@@ -31,9 +30,7 @@ class BaseDBModel(Base):
     )
 
     def as_dict(self) -> dict[str, Any]:
-        return {
-            k: v for k, v in self.__dict__.items() if not k.startswith('__') and not callable(k)
-        }
+        return {k: v for k, v in self.__dict__.items() if not k.startswith('__') and not callable(k)}
 
     def update(self, data: dict[str, Any]) -> None:
         for attr, value in data.items():

@@ -6,9 +6,9 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
-import redis.asyncio as aioredis
 from starlette.middleware.base import BaseHTTPMiddleware
 
+import redis.asyncio as aioredis
 from src.core.config import config
 
 

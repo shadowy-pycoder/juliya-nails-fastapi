@@ -21,12 +21,8 @@ class Entry(BaseDBModel):
     user_id: so.Mapped[UUID] = so.mapped_column(
         pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
     )
-    user: so.Mapped['User'] = so.relationship(
-        back_populates='entries', lazy='joined', innerjoin=True
-    )
-    completed: so.Mapped[bool] = so.mapped_column(
-        nullable=False, default=False, server_default='false'
-    )
+    user: so.Mapped['User'] = so.relationship(back_populates='entries', lazy='joined', innerjoin=True)
+    completed: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')
 
     @property
     def timestamp(self) -> float:
