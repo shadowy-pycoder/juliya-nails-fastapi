@@ -19,7 +19,7 @@ class Entry(BaseDBModel):
     date: so.Mapped['date'] = so.mapped_column(sa.Date, nullable=False)
     time: so.Mapped['time'] = so.mapped_column(sa.Time, nullable=False)
     user_id: so.Mapped[UUID] = so.mapped_column(
-        pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
+        pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE', onupdate='CASCADE'), nullable=False
     )
     user: so.Mapped['User'] = so.relationship(back_populates='entries', lazy='joined', innerjoin=True)
     completed: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')

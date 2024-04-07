@@ -25,13 +25,13 @@ class User(BaseDBModel):
     active: so.Mapped[bool] = so.mapped_column(nullable=False, default=False, server_default='false')
     admin: so.Mapped[bool] = so.mapped_column(nullable=False, default=False)
     entries: so.WriteOnlyMapped['Entry'] = so.relationship(
-        back_populates='user', cascade='all, delete-orphan', passive_deletes=True
+        back_populates='user', cascade='save-update, merge, expunge, delete, delete-orphan', passive_deletes=True
     )
     posts: so.WriteOnlyMapped['Post'] = so.relationship(
-        back_populates='author', cascade='all, delete-orphan', passive_deletes=True
+        back_populates='author', cascade='save-update, merge, expunge, delete, delete-orphan', passive_deletes=True
     )
     socials: so.Mapped['SocialMedia'] = so.relationship(
-        back_populates='user', cascade='all, delete-orphan', lazy='joined'
+        back_populates='user', cascade='save-update, merge, expunge, delete, delete-orphan', lazy='joined'
     )
 
     @property

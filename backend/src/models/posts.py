@@ -15,7 +15,7 @@ class Post(BaseDBModel):
     image: so.Mapped[str] = so.mapped_column(sa.String(50), nullable=False)
     content: so.Mapped[str] = so.mapped_column(sa.Text, nullable=False)
     author_id: so.Mapped[UUID] = so.mapped_column(
-        pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE'), nullable=False
+        pg_UUID(as_uuid=True), sa.ForeignKey('user.uuid', ondelete='CASCADE', onupdate='CASCADE'), nullable=False
     )
     author: so.Mapped['User'] = so.relationship(back_populates='posts', lazy='joined', innerjoin=True)
 
