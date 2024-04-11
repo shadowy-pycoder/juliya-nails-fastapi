@@ -1,8 +1,7 @@
-version: "3.8"
 services:
   api:
-    image: juliyanails-prod
-    container_name: juliyanails-prod
+    image: juliyanails-api
+    container_name: juliyanails-api
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -64,6 +63,22 @@ services:
       - db
     networks:
       - juliyanails_network
+  frontend:
+    image: juliyanails-front
+    container_name: juliyanails-front
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - './frontend:/app'
+      - '/app/node_modules'
+    ports:
+      - 4000:4000
+    depends_on:
+      - api
+    networks:
+      - juliyanails_network
+    
     
 volumes:
   postgres_data:

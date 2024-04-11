@@ -31,6 +31,6 @@ class ServerConfig(BaseSettings):
     MAX_REQUESTS: int = 5
     MAX_REQUESTS_WINDOW: int = 60
     TEMPLATE_FOLDER: str = 'templates'
-    FRONTEND_HOST: str = 'http://127.0.0.1:8001'
+    FRONTEND_HOST: str = 'http://127.0.0.1:4000'
     LOGGING: dict[str, Any] = get_logging_config(ROOT_DIR / 'core/conf/logging.yaml')
     ORIGINS: list[str] = [FRONTEND_HOST]
