@@ -31,10 +31,10 @@ fastapi-mail = "^1.4.1"
 itsdangerous = "^2.1.2"
 pyyaml = "^6.0.1"
 types-pyyaml = "^6.0.12.12"
-redis = "^5.0.1"
+redis = "5.0.3"
 fastapi-cache2 = "^0.2.1"
-types-redis = "^4.6.0.20240106"
 pre-commit = "3.7.0"
+types-redis = "4.6.0.20240409"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -75,6 +75,7 @@ no_implicit_optional = true
 implicit_reexport = true
 strict_equality = true
 ignore_missing_imports = true
+disable_error_code = 'type-arg'
 
 
 [tool.pydantic-mypy]

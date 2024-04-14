@@ -1,6 +1,5 @@
 import logging.config
 from datetime import datetime, timezone
-from typing import Any
 
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
@@ -88,7 +87,7 @@ def redirect_to_docs() -> RedirectResponse:
     include_in_schema=False,
 )
 async def healthcheck(
-    redis: Redis[Any] = Depends(get_redis),
+    redis: Redis = Depends(get_redis),
     session: AsyncSession = Depends(get_async_session),
 ) -> JSONResponse:
     await redis.ping()
