@@ -1,5 +1,6 @@
 import logging.config
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
@@ -8,9 +9,9 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_pagination import add_pagination
+from redis.asyncio import Redis
 from sqlalchemy import text
 
-from redis.asyncio import Redis
 from src.api import router_v1
 from src.core.config import config
 from src.database import AsyncSession, get_async_session
@@ -87,7 +88,7 @@ def redirect_to_docs() -> RedirectResponse:
     include_in_schema=False,
 )
 async def healthcheck(
-    redis: Redis = Depends(get_redis),  # type: ignore[type-arg]
+    redis: Redis[Any] = Depends(get_redis),
     session: AsyncSession = Depends(get_async_session),
 ) -> JSONResponse:
     await redis.ping()

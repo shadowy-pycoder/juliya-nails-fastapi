@@ -3,6 +3,7 @@ import sqlalchemy as sa
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.models.services import Service
 from src.models.users import User
 from src.schemas.auth import Token

@@ -34,6 +34,7 @@ types-pyyaml = "^6.0.12.12"
 redis = "^5.0.1"
 fastapi-cache2 = "^0.2.1"
 types-redis = "^4.6.0.20240106"
+pre-commit = "3.7.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -106,6 +107,6 @@ line-ending = "auto"
 [tool.ruff.lint.isort]
 lines-after-imports = 2
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402", "F401"]
 "env.py" = ["E402", "F401"]

@@ -183,9 +183,7 @@ async def test_get_user_posts(
         headers={'Authorization': f'Bearer {unverified_user_token.access_token}'},
     )
     assert resp.status_code == status.HTTP_403_FORBIDDEN
-    assert resp.json() == {
-        'detail': 'Your account is inactive. Please activate your account to proceed.'
-    }
+    assert resp.json() == {'detail': 'Your account is inactive. Please activate your account to proceed.'}
 
 
 async def test_get_user_socials(
@@ -272,9 +270,7 @@ async def test_get_user_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for filename, img_path, _ in await image_factory(
-        instance=verified_user, async_session=async_session
-    ):
+    async for filename, img_path, _ in await image_factory(instance=verified_user, async_session=async_session):
         resp = await async_client.get(
             f'users/{verified_user.uuid}/socials/avatar',
             headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
@@ -298,9 +294,7 @@ async def test_update_user_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for old_filename, old_img_path, _ in await image_factory(
-        instance=verified_user, async_session=async_session
-    ):
+    async for old_filename, old_img_path, _ in await image_factory(instance=verified_user, async_session=async_session):
         img = create_temp_image()
         resp = await async_client.put(
             f'users/{verified_user.uuid}/socials/avatar',
@@ -332,9 +326,7 @@ async def test_delete_user_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for filename, img_path, _ in await image_factory(
-        instance=verified_user, async_session=async_session
-    ):
+    async for filename, img_path, _ in await image_factory(instance=verified_user, async_session=async_session):
         assert verified_user.socials.avatar == filename
         resp = await async_client.delete(
             f'users/{verified_user.uuid}/socials/avatar',

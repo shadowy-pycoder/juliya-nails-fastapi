@@ -4,6 +4,7 @@ from fakeredis.aioredis import FakeRedis
 from fastapi import status
 from freezegun.api import FrozenDateTimeFactory
 from httpx import AsyncClient
+
 from src.core.config import config
 from src.models.users import User
 from src.schemas.auth import Token

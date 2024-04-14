@@ -7,12 +7,13 @@ from pathlib import Path
 from typing import Any
 
 import aiofiles
-import filetype  # type: ignore[import-untyped]
+import filetype
 from fastapi import APIRouter, HTTPException, UploadFile, status
 from fastapi.logger import logger
 from PIL import Image
 
 from src.core.config import config
+
 
 HTTP_403_FORBIDDEN = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -92,10 +93,7 @@ async def save_image(file: UploadFile, *, path: ImageType) -> str:
     img_path.mkdir(parents=True, exist_ok=True)
     img_path = img_path / filename
     detected_content_type = filetype.guess(file.file).extension.lower()
-    if (
-        file.content_type not in config.ACCEPTED_FILE_TYPES
-        or detected_content_type not in config.ACCEPTED_FILE_TYPES
-    ):
+    if file.content_type not in config.ACCEPTED_FILE_TYPES or detected_content_type not in config.ACCEPTED_FILE_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail='Unsupported file type',

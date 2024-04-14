@@ -45,9 +45,7 @@ async def test_register(async_client: AsyncClient, async_session: AsyncSession) 
 
 
 @pytest.mark.dependency(depends=['test_register'])
-async def test_token(
-    async_client: AsyncClient, async_session: AsyncSession, redis_client: FakeRedis
-) -> None:
+async def test_token(async_client: AsyncClient, async_session: AsyncSession, redis_client: FakeRedis) -> None:
     data = {'username': USER_DATA['username'], 'password': USER_DATA['password']}
     resp = await async_client.post('auth/token', data=data)
     assert resp.status_code == status.HTTP_200_OK
@@ -93,9 +91,7 @@ async def test_revoke_refresh_token(async_client: AsyncClient, redis_client: Fak
 async def test_resend_activation(async_client: AsyncClient) -> None:
     access_token = str(pytest.ACCESS_TOKEN)
     with fm.record_messages() as outbox:
-        resp = await async_client.post(
-            'auth/resend-activation', headers={'Authorization': f'Bearer {access_token}'}
-        )
+        resp = await async_client.post('auth/resend-activation', headers={'Authorization': f'Bearer {access_token}'})
         assert resp.status_code == status.HTTP_200_OK
         assert len(outbox) == 1
         assert outbox[0]['from'] == f'{config.MAIL_FROM_NAME} <{config.MAIL_FROM}>'
@@ -109,9 +105,7 @@ async def test_resend_activation(async_client: AsyncClient) -> None:
 async def test_activate_account(async_client: AsyncClient) -> None:
     access_token = str(pytest.ACCESS_TOKEN)
     data = {'token': str(pytest.ACTIVATION_TOKEN)}
-    resp = await async_client.post(
-        'auth/activate', json=data, headers={'Authorization': f'Bearer {access_token}'}
-    )
+    resp = await async_client.post('auth/activate', json=data, headers={'Authorization': f'Bearer {access_token}'})
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json() == {
         'code': status.HTTP_200_OK,
@@ -183,9 +177,7 @@ async def test_change_email(async_client: AsyncClient) -> None:
 async def test_resend_email_change_confirmation(async_client: AsyncClient) -> None:
     access_token = str(pytest.ACCESS_TOKEN)
     with fm.record_messages() as outbox:
-        resp = await async_client.post(
-            'auth/resend-confirmation', headers={'Authorization': f'Bearer {access_token}'}
-        )
+        resp = await async_client.post('auth/resend-confirmation', headers={'Authorization': f'Bearer {access_token}'})
         assert resp.status_code == status.HTTP_200_OK
         assert len(outbox) == 1
         assert outbox[0]['from'] == f'{config.MAIL_FROM_NAME} <{config.MAIL_FROM}>'
@@ -223,9 +215,7 @@ async def test_register_duplicate(async_client: AsyncClient) -> None:
     }
     resp = await async_client.post('auth/register', json=data)
     assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert resp.json() == {
-        'detail': 'Please choose a different username\nPlease choose a different email'
-    }
+    assert resp.json() == {'detail': 'Please choose a different username\nPlease choose a different email'}
 
 
 @pytest.mark.dependency(depends=['test_reset_password'])

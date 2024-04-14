@@ -18,9 +18,7 @@ async def test_get_me(
     verified_user_token: Token,
     async_client: AsyncClient,
 ) -> None:
-    resp = await async_client.get(
-        'users/me', headers={'Authorization': f'Bearer {verified_user_token.access_token}'}
-    )
+    resp = await async_client.get('users/me', headers={'Authorization': f'Bearer {verified_user_token.access_token}'})
     assert resp.status_code == status.HTTP_200_OK
     user = UserRead(**resp.json())
     assert user.username == verified_user.username
@@ -202,9 +200,7 @@ async def test_get_my_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for filename, img_path, _ in await image_factory(
-        instance=verified_user, async_session=async_session
-    ):
+    async for filename, img_path, _ in await image_factory(instance=verified_user, async_session=async_session):
         resp = await async_client.get(
             'users/me/socials/avatar',
             headers={'Authorization': f'Bearer {verified_user_token.access_token}'},
@@ -222,9 +218,7 @@ async def test_update_my_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for old_filename, old_img_path, _ in await image_factory(
-        instance=verified_user, async_session=async_session
-    ):
+    async for old_filename, old_img_path, _ in await image_factory(instance=verified_user, async_session=async_session):
         img = create_temp_image()
         resp = await async_client.put(
             'users/me/socials/avatar',
@@ -249,9 +243,7 @@ async def test_delete_my_avatar(
     async_client: AsyncClient,
     async_session: AsyncSession,
 ) -> None:
-    async for filename, img_path, _ in await image_factory(
-        instance=verified_user, async_session=async_session
-    ):
+    async for filename, img_path, _ in await image_factory(instance=verified_user, async_session=async_session):
         assert verified_user.socials.avatar == filename
         resp = await async_client.delete(
             'users/me/socials/avatar',

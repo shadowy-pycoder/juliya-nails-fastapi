@@ -1,12 +1,13 @@
 """initial_revision
 
 Revision ID: 0f26e43206a7
-Revises: 
+Revises:
 Create Date: 2024-01-11 18:56:00.233175
 
 """
-from alembic import op
+
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -23,12 +24,8 @@ def upgrade() -> None:
         sa.Column('name', sa.String(length=64), nullable=False),
         sa.Column('duration', sa.Integer(), nullable=False),
         sa.Column('uuid', sa.UUID(), nullable=False),
-        sa.Column(
-            'created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
-        sa.Column(
-            'updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
+        sa.Column('created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('uuid'),
         sa.UniqueConstraint('name'),
     )
@@ -42,12 +39,8 @@ def upgrade() -> None:
         sa.Column('active', sa.Boolean(), server_default='false', nullable=False),
         sa.Column('admin', sa.Boolean(), nullable=False),
         sa.Column('uuid', sa.UUID(), nullable=False),
-        sa.Column(
-            'created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
-        sa.Column(
-            'updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
+        sa.Column('created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('uuid'),
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)
@@ -59,12 +52,8 @@ def upgrade() -> None:
         sa.Column('user_id', sa.UUID(), nullable=False),
         sa.Column('completed', sa.Boolean(), server_default='false', nullable=False),
         sa.Column('uuid', sa.UUID(), nullable=False),
-        sa.Column(
-            'created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
-        sa.Column(
-            'updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
+        sa.Column('created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['user.uuid'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('uuid'),
     )
@@ -75,12 +64,8 @@ def upgrade() -> None:
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('author_id', sa.UUID(), nullable=False),
         sa.Column('uuid', sa.UUID(), nullable=False),
-        sa.Column(
-            'created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
-        sa.Column(
-            'updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
+        sa.Column('created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['author_id'], ['user.uuid'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('uuid'),
         sa.UniqueConstraint('title'),
@@ -101,12 +86,8 @@ def upgrade() -> None:
         sa.Column('vk', sa.String(length=255), nullable=True),
         sa.Column('about', sa.String(length=255), nullable=True),
         sa.Column('uuid', sa.UUID(), nullable=False),
-        sa.Column(
-            'created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
-        sa.Column(
-            'updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False
-        ),
+        sa.Column('created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['user_id'], ['user.uuid'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('uuid'),
         sa.UniqueConstraint('instagram'),

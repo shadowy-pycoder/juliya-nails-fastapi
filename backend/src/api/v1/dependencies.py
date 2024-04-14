@@ -1,8 +1,10 @@
+from typing import Any
+
 from fastapi import Depends, HTTPException, status
 from fastapi_mail.email_utils import DefaultChecker
 from pydantic import UUID4
-
 from redis.asyncio import Redis
+
 from src.models.entries import Entry
 from src.models.users import User
 from src.repositories.auth import AuthRepository, EmailRequest, ResetRequest, oauth2_scheme
@@ -62,7 +64,7 @@ async def validate_entry(
     return entry
 
 
-async def default_checker(redis: Redis = Depends(get_redis)) -> DefaultChecker:  # type: ignore[type-arg]
+async def default_checker(redis: Redis[Any] = Depends(get_redis)) -> DefaultChecker:
     checker = DefaultChecker(db_provider='redis')
     checker.redis_client = redis
     await checker.init_redis()

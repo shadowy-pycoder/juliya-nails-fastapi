@@ -12,6 +12,7 @@ from pytest import FixtureRequest
 from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
+
 from src.core.config import config
 from src.database import Base, get_async_session
 from src.main import app
@@ -21,7 +22,6 @@ from src.models.services import Service
 from src.models.users import User
 from src.repositories.redis import get_redis, rate_limiter
 from src.schemas.auth import Token
-
 from tests.utils import (
     ADMIN_USER,
     BASE_URL,
@@ -41,6 +41,7 @@ from tests.utils import (
     create_user,
     delete_user,
 )
+
 
 engine_test = create_async_engine(config.POSTGRES_DSN, poolclass=NullPool)
 async_session_maker = async_sessionmaker(engine_test, expire_on_commit=False, autoflush=False)
@@ -92,9 +93,7 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture(scope='function')
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient(
-        app=app, base_url=BASE_URL, follow_redirects=True, timeout=Timeout(15)
-    ) as client:
+    async with AsyncClient(app=app, base_url=BASE_URL, follow_redirects=True, timeout=Timeout(15)) as client:
         await app.router.startup()
         yield client
         await app.router.shutdown()
@@ -156,9 +155,7 @@ async def verified_user_token(verified_user: User, async_client: AsyncClient) ->
 
 
 @pytest.fixture(scope='function')
-async def second_verified_user_token(
-    second_verified_user: User, async_client: AsyncClient
-) -> Token:
+async def second_verified_user_token(second_verified_user: User, async_client: AsyncClient) -> Token:
     return await create_token(second_verified_user, SECOND_VERIFIED_USER, async_client)
 
 
@@ -193,9 +190,7 @@ def entry_factory(request: FixtureRequest) -> EntryFactory:
 
 
 @pytest.fixture(scope='function')
-async def post_list(
-    admin_user: User, async_session: AsyncSession
-) -> AsyncGenerator[list[Post], None]:
+async def post_list(admin_user: User, async_session: AsyncSession) -> AsyncGenerator[list[Post], None]:
     posts = [Post(**data) for data in POSTS]
     async_session.add_all(posts)
     await async_session.commit()

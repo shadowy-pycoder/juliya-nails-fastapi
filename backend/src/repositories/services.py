@@ -12,9 +12,8 @@ from src.schemas.services import (
     ServiceUpdatePartial,
 )
 
-ServiceSchema: TypeAlias = (
-    ServiceUpdate | ServiceUpdatePartial | ServiceAdminUpdate | ServiceAdminUpdatePartial
-)
+
+ServiceSchema: TypeAlias = ServiceUpdate | ServiceUpdatePartial | ServiceAdminUpdate | ServiceAdminUpdatePartial
 
 
 class ServiceRepository(

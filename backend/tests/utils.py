@@ -12,6 +12,8 @@ from httpx import AsyncClient
 from passlib.hash import bcrypt
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.datastructures import Headers
+
 from src.core.config import config
 from src.models.entries import Entry
 from src.models.posts import Post
@@ -20,7 +22,6 @@ from src.models.socials import SocialMedia
 from src.models.users import User
 from src.schemas.auth import Token
 from src.utils import ImageType, save_image
-from starlette.datastructures import Headers
 
 
 VERSION = 'api/v1/'

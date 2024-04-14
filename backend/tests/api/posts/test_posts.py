@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.core.config import config
 from src.models.posts import Post
 from src.models.users import User

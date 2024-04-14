@@ -1,6 +1,9 @@
-import time
-from typing import Awaitable, Callable
+from __future__ import annotations
 
+import time
+from typing import Any, Awaitable, Callable
+
+import redis.asyncio as aioredis
 from cryptography.fernet import Fernet
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.encoders import jsonable_encoder
@@ -8,7 +11,6 @@ from fastapi.responses import JSONResponse
 from pydantic import UUID4
 from starlette.middleware.base import BaseHTTPMiddleware
 
-import redis.asyncio as aioredis
 from src.core.config import config
 
 
@@ -19,12 +21,12 @@ def create_redis() -> aioredis.ConnectionPool:
 pool = create_redis()
 
 
-def get_redis() -> aioredis.Redis:  # type: ignore[type-arg]
+def get_redis() -> aioredis.Redis[Any]:
     return aioredis.Redis(connection_pool=pool)
 
 
 class RedisRepository:
-    def __init__(self, redis: aioredis.Redis = Depends(get_redis)) -> None:  # type: ignore[type-arg]
+    def __init__(self, redis: aioredis.Redis[Any] = Depends(get_redis)) -> None:
         self.redis = redis
         self.fernet = Fernet(config.SECRET_KEY)
         self.redis_hash = config.REDIS_HASH

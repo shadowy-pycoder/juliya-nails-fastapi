@@ -6,6 +6,7 @@ from fastapi import status
 from httpx import AsyncClient
 from pytest import FixtureRequest
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.models.entries import Entry
 from src.models.services import Service
 from src.models.users import User
