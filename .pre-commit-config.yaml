@@ -34,22 +34,37 @@ repos:
         files: ^backend/
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: 'v9.0.0'
+    rev: 'v7.32.0'
     hooks:
       - id: eslint
         types: [file]
         types_or: [javascript, jsx, ts, tsx, vue]
         additional_dependencies:
         - eslint-plugin-vue@8.0.3
-        entry: bash -c 'cd frontend'
-        files: ^frontend/
+        args: [
+        --fix
+        ]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: 'v4.0.0-alpha.8'  
     hooks:
       - id: prettier
-        entry: bash -c 'cd frontend'
         types: [file]
         types_or: [javascript, jsx, ts, tsx, vue]
-        files: ^frontend/
+        args: [
+        --cache-location,
+        "./frontend/node_modules/.cache/prettier/.prettier-cache",
+        --arrow-parens,
+         "avoid" ,
+        --jsx-single-quote,
+        --print-width,
+         "120",
+        --single-attribute-per-line,
+        --single-quote,
+        --tab-width,
+         "4",
+        --vue-indent-script-and-style,
+        --write, 
+        "./**/*.{js,vue,html,css}"
+        ]
 
