@@ -8,8 +8,6 @@ ENV PATH /app/node_modules/.bin:$PATH
 
 RUN npm install --global npm@10.5.2
 
-RUN npm install --global @vue/cli@5.0.8
-
 COPY --chown=node:node package.json .
 COPY --chown=node:node package-lock.json .
 RUN npm install
